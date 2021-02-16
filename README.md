@@ -28,9 +28,9 @@ A prior copy of the game is required to extract the assets.
  * Run `make -j$(nproc)` to build the game
  * If the build succeeded, the game will be in `build/us_nds`, named `sm64.us.nds`
 
-### Docker Installation
+## Docker Installation
 
-#### Create Docker image
+### Create Docker image
 
 After installing and starting Docker, create the docker image. This only needs to be done once.
 ```
