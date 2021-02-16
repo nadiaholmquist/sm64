@@ -61,6 +61,7 @@ endif
 ifeq ($(TARGET_NDS),1)
   OPT_FLAGS := -O2
   GRUCODE := f3dex2
+  COMPILER := gcc
 endif
 
 TARGET := sm64.$(VERSION)
