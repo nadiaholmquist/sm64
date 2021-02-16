@@ -6,13 +6,19 @@
 This repo does not include all assets necessary for compiling the ROMs.
 A prior copy of the game is required to extract the assets.
 
-## Installation
+## Windows installation
+ * Download the latest source from [here](https://github.com/Hydr8gon/sm64/archive/nds.zip), extract it somewhere
+ * Install Docker Desktop from [the Docker website](https://www.docker.com/get-started), and reboot when the installer prompts you
+ * Place a Super Mario 64 ROM as baserom.us.z64 in the directory you extracted the zip to
+ * Run `build_docker.bat`
+ * Once the build is complete, the game will be in `build/us_nds/`.
+
+## Linux installation
  * First follow [the guide for installing devkitPro packages](https://devkitpro.org/wiki/Getting_Started), also installing the `nds-dev` group as mentioned
  * Install the needed tools
    * Debian/Ubuntu: `sudo apt install -y build-essential git python`
-   * Fedora: `sudo dnf install make git python`
+   * Fedora: `sudo dnf install gcc make git python`
    * Arch/derivatives like Manjaro: `sudo pacman -S base-devel git python`
-   * Windows with MSYS2: `pacman -S make git python`
  * Clone this repository and change to its directory
    ```
    git clone https://github.com/Hydr8gon/sm64.git
