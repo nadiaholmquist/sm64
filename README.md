@@ -22,6 +22,32 @@ A prior copy of the game is required to extract the assets.
  * Run `make -j$(nproc)` to build the game
  * If the build succeeded, the game will be in `build/us_nds`, named `sm64.us.nds`
 
+### Docker Installation
+
+#### Create Docker image
+
+After installing and starting Docker, create the docker image. This only needs to be done once.
+```
+docker build -t sm64dsi .
+```
+
+#### Build
+
+To build, mount the local filesystem into the Docker container and build the ROM with `docker run sm64 make`.
+
+##### macOS example for (U):
+```
+docker run --rm --mount type=bind,source="$(pwd)",destination=/sm64 sm64dsi make VERSION=us -j4
+```
+
+##### Linux example for (U):
+For a Linux host, Docker needs to be instructed which user should own the output files:
+```
+docker run --rm --mount type=bind,source="$(pwd)",destination=/sm64 --user $UID:$GID sm64dsi make VERSION=us -j4
+```
+
+Resulting artifacts can be found in the `build` directory.
+
 ## Project Structure
 	
 	sm64
