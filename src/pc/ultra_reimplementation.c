@@ -9,6 +9,7 @@
 
 extern OSMgrArgs piMgrArgs;
 extern char* get_config_file(const char*);
+char* save_path;
 
 u64 osClockRate = 62500000;
 
@@ -147,7 +148,8 @@ s32 osEepromLongRead(UNUSED OSMesgQueue *mq, u8 address, u8 *buffer, int nbytes)
         ret = 0;
     }
 #else
-    FILE *fp = fopen(get_config_file("sm64_save_file.bin"), "rb");
+    save_path = get_config_file("sm64_save_file.bin");
+    FILE *fp = fopen(save_path, "rb");
     if (fp == NULL) {
         return -1;
     }
@@ -177,7 +179,7 @@ s32 osEepromLongWrite(UNUSED OSMesgQueue *mq, u8 address, u8 *buffer, int nbytes
     }, content);
     s32 ret = 0;
 #else
-    FILE* fp = fopen("sm64_save_file.bin", "wb");
+    FILE* fp = fopen(save_path, "wb");
     if (fp == NULL) {
         return -1;
     }

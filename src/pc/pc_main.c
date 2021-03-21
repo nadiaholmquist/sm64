@@ -137,9 +137,6 @@ static void on_anim_frame(double time) {
 
 
 
-static void save_config(void) {
-    configfile_save(CONFIG_FILE);
-}
 
 static void on_fullscreen_changed(bool is_now_fullscreen) {
     configFullscreen = is_now_fullscreen;
@@ -194,6 +191,10 @@ char* get_config_file(const char* fileName) {
     strcat(location, "/");
     strcat(location, fileName);
     return location;
+}
+
+static void save_config(void) {
+    configfile_save(get_config_file(CONFIG_FILE));
 }
 
 void main_func(void) {
