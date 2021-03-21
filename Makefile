@@ -33,6 +33,8 @@ ifeq ($(TARGET_N64),0)
   ifeq ($(TARGET_WEB),0)
     ifeq ($(OS),Windows_NT)
       TARGET_WINDOWS := 1
+    else ifeq ($(shell uname -s),Darwin)
+      TARGET_MAC := 1
     else
       # TODO: Detect Mac OS X, BSD, etc. For now, assume Linux
       TARGET_LINUX := 1
@@ -110,7 +112,12 @@ endif
 
 TARGET := sm64.$(VERSION)
 VERSION_CFLAGS := -D$(VERSION_DEF)
+
+ifneq ($(TARGET_MAC),1)
 VERSION_ASFLAGS := --defsym $(VERSION_DEF)=1
+else
+VERSION_ASFLAGS := -D$(VERSION_DEF)=1
+endif
 
 # Microcode
 
@@ -370,7 +377,7 @@ endif
 
 AS        := $(CROSS)as
 CC        := $(QEMU_IRIX) -silent -L $(IRIX_ROOT) $(IRIX_ROOT)/usr/bin/cc
-CPP       := cpp -P -Wno-trigraphs
+CPP       := cpp-10 -P -Wno-trigraphs
 LD        := $(CROSS)ld
 AR        := $(CROSS)ar
 OBJDUMP   := $(CROSS)objdump
@@ -421,8 +428,8 @@ else # TARGET_N64
 
 AS := as
 ifneq ($(TARGET_WEB),1)
-  CC := gcc
-  CXX := g++
+  CC := gcc-10
+  CXX := g++-10
 else
   CC := emcc
 endif
@@ -431,7 +438,7 @@ ifeq ($(CXX_FILES),"")
 else
   LD := $(CXX)
 endif
-CPP := cpp -P
+CPP := cpp-10 -P
 OBJDUMP := objdump
 OBJCOPY := objcopy
 PYTHON := python3
@@ -440,6 +447,10 @@ PYTHON := python3
 ifeq ($(TARGET_WINDOWS),1)
   PLATFORM_CFLAGS  := -DTARGET_WINDOWS
   PLATFORM_LDFLAGS := -lm -lxinput9_1_0 -lole32 -no-pie -mwindows
+endif
+ifeq ($(TARGET_MAC),1)
+  PLATFORM_CFLAGS  := -DTARGET_MAC
+  PLATFORM_LDFLAGS := -lm -lpthread
 endif
 ifeq ($(TARGET_LINUX),1)
   PLATFORM_CFLAGS  := -DTARGET_LINUX `pkg-config --cflags libusb-1.0`
@@ -459,6 +470,10 @@ ifeq ($(ENABLE_OPENGL),1)
   ifeq ($(TARGET_WINDOWS),1)
     GFX_CFLAGS  += $(shell sdl2-config --cflags) -DGLEW_STATIC
     GFX_LDFLAGS += $(shell sdl2-config --libs) -lglew32 -lopengl32 -lwinmm -limm32 -lversion -loleaut32 -lsetupapi
+  endif
+  ifeq ($(TARGET_MAC),1)
+    GFX_CFLAGS  += $(shell sdl2-config --cflags)
+    GFX_LDFLAGS += -framework OpenGL $(shell sdl2-config --libs)
   endif
   ifeq ($(TARGET_LINUX),1)
     GFX_CFLAGS  += $(shell sdl2-config --cflags)
@@ -484,6 +499,10 @@ CC_CHECK := $(CC) -fsyntax-only -fsigned-char $(INCLUDE_CFLAGS) -Wall -Wextra -W
 CFLAGS := $(OPT_FLAGS) $(INCLUDE_CFLAGS) -D_LANGUAGE_C $(VERSION_CFLAGS) $(MATCH_CFLAGS) $(PLATFORM_CFLAGS) $(GFX_CFLAGS) $(GRUCODE_CFLAGS) -fno-strict-aliasing -fwrapv -march=native
 
 ASFLAGS := -I include -I $(BUILD_DIR) $(VERSION_ASFLAGS)
+
+ifeq ($(TARGET_MAC),1)
+  ASFLAGS += -target $(shell uname -m)-elf
+endif
 
 LDFLAGS := $(PLATFORM_LDFLAGS) $(GFX_LDFLAGS)
 
@@ -792,8 +811,13 @@ $(BUILD_DIR)/%.o: $(BUILD_DIR)/%.c
 	@$(CC_CHECK) $(CC_CHECK_CFLAGS) -MMD -MP -MT $@ -MF $(BUILD_DIR)/$*.d $<
 	$(CC) -c $(CFLAGS) -o $@ $<
 
+ifeq ($(TARGET_MAC),1)
+$(BUILD_DIR)/%.o: %.s
+	$(AS) $(ASFLAGS) -o $@ $<
+else
 $(BUILD_DIR)/%.o: %.s
 	$(AS) $(ASFLAGS) -MD $(BUILD_DIR)/$*.d -o $@ $<
+endif
 
 ifeq ($(TARGET_N64),1)
 $(BUILD_DIR)/$(LD_SCRIPT): $(LD_SCRIPT)
