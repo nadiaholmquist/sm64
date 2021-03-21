@@ -8,6 +8,7 @@
 #endif
 
 extern OSMgrArgs piMgrArgs;
+extern char* get_config_file(const char*);
 
 u64 osClockRate = 62500000;
 
@@ -146,7 +147,7 @@ s32 osEepromLongRead(UNUSED OSMesgQueue *mq, u8 address, u8 *buffer, int nbytes)
         ret = 0;
     }
 #else
-    FILE *fp = fopen("sm64_save_file.bin", "rb");
+    FILE *fp = fopen(get_config_file("sm64_save_file.bin"), "rb");
     if (fp == NULL) {
         return -1;
     }

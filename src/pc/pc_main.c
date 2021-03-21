@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef TARGET_WEB
 #include <emscripten.h>
@@ -33,6 +34,8 @@
 #include "compat.h"
 
 #define CONFIG_FILE "sm64config.txt"
+
+char* configDirectory;
 
 OSMesg D_80339BEC;
 OSMesgQueue gSIEventMesgQueue;
@@ -132,12 +135,65 @@ static void on_anim_frame(double time) {
 }
 #endif
 
+
+
 static void save_config(void) {
     configfile_save(CONFIG_FILE);
 }
 
 static void on_fullscreen_changed(bool is_now_fullscreen) {
     configFullscreen = is_now_fullscreen;
+}
+
+#if !defined(_WIN32) && !defined(_WIN64)
+#define _POSIX_C_SOURCE 1
+#include <limits.h>
+#include <unistd.h>
+#include <sys/stat.h>
+
+static void setup_config_directory() {
+    configDirectory = calloc(1, PATH_MAX);
+    char* homeDir = getenv("HOME");
+
+    // No home directory?
+    if (homeDir == NULL) {
+        configDirectory[0] = '.';
+        return;
+    }
+
+#ifdef __APPLE__
+    strlcat(configDirectory, homeDir, PATH_MAX);
+    strlcat(configDirectory, "/Library/Application Support/Super Mario 64", PATH_MAX);
+#else
+    const char* xdgConfigHome = getenv("XDG_CONFIG_HOME");
+    if (xdgConfigHome != NULL) {
+        mkdir(xdgConfigHome, 0755);
+        strlcat(configDirectory, xdgConfigHome);
+    } else {
+        strlcat(configDirectory, homeDir, PATH_MAX);
+        strlcat(configDirectory, "/.config", PATH_MAX);
+    }
+    mkdir(configDirectory, 0755);
+    strlcat(configDirectory, "/sm64", PATH_MAX);
+    mkdir(configDirectory, 0755);
+#endif
+    if (access(configDirectory, F_OK) != 0) {
+        mkdir(configDirectory, 0755);
+    }
+}
+#else
+static void setup_config_directory() {
+    configDirectory = calloc(1, 2);
+    configDirectory[0] = '.';
+}
+#endif
+
+char* get_config_file(const char* fileName) {
+    char* location = calloc(strlen(configDirectory) + strlen(fileName) + 2, 1);
+    strcat(location, configDirectory);
+    strcat(location, "/");
+    strcat(location, fileName);
+    return location;
 }
 
 void main_func(void) {
@@ -150,7 +206,8 @@ void main_func(void) {
 #endif
     gEffectsMemoryPool = mem_pool_init(0x4000, MEMORY_POOL_LEFT);
 
-    configfile_load(CONFIG_FILE);
+    setup_config_directory();
+    configfile_load(get_config_file(CONFIG_FILE));
     atexit(save_config);
 
 #ifdef TARGET_WEB
