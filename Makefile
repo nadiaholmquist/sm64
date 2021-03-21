@@ -474,7 +474,7 @@ ifeq ($(ENABLE_OPENGL),1)
   endif
   ifeq ($(TARGET_MAC),1)
     GFX_CFLAGS  += $(shell sdl2-config --cflags)
-    GFX_LDFLAGS += -framework OpenGL $(shell sdl2-config --libs)
+    GFX_LDFLAGS += -framework OpenGL $(shell sdl2-config --static-libs)
   endif
   ifeq ($(TARGET_LINUX),1)
     GFX_CFLAGS  += $(shell sdl2-config --cflags)
