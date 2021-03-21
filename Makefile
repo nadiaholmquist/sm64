@@ -451,6 +451,7 @@ endif
 ifeq ($(TARGET_MAC),1)
   PLATFORM_CFLAGS  := -DTARGET_MAC
   PLATFORM_LDFLAGS := -lm -lpthread
+  OBJCOPY := /usr/local/opt/binutils/bin/objcopy
 endif
 ifeq ($(TARGET_LINUX),1)
   PLATFORM_CFLAGS  := -DTARGET_LINUX `pkg-config --cflags libusb-1.0`
