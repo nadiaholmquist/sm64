@@ -27,6 +27,7 @@
 #include "gfx_screen_config.h"
 
 #define GFX_API_NAME "SDL2 - OpenGL"
+#define FRAME_RATE 30
 
 static SDL_Window *wnd;
 static int inverted_scancode_table[512];
@@ -113,49 +114,6 @@ static void set_fullscreen(bool on, bool call_callback) {
     }
 }
 
-int test_vsync(void) {
-    // Even if SDL_GL_SetSwapInterval succeeds, it doesn't mean that VSync actually works.
-    // A 60 Hz monitor should have a swap interval of 16.67 milliseconds.
-    // Try to detect the length of a vsync by swapping buffers some times.
-    // Since the graphics card may enqueue a fixed number of frames,
-    // first send in four dummy frames to hopefully fill the queue.
-    // This method will fail if the refresh rate is changed, which, in
-    // combination with that we can't control the queue size (i.e. lag)
-    // is a reason this generic SDL2 backend should only be used as last resort.
-    Uint32 start;
-    Uint32 end;
-
-    SDL_GL_SwapWindow(wnd);
-    SDL_GL_SwapWindow(wnd);
-    SDL_GL_SwapWindow(wnd);
-    SDL_GL_SwapWindow(wnd);
-    SDL_GL_SwapWindow(wnd);
-    SDL_GL_SwapWindow(wnd);
-    SDL_GL_SwapWindow(wnd);
-    SDL_GL_SwapWindow(wnd);
-    start = SDL_GetTicks();
-    SDL_GL_SwapWindow(wnd);
-    SDL_GL_SwapWindow(wnd);
-    SDL_GL_SwapWindow(wnd);
-    SDL_GL_SwapWindow(wnd);
-    end = SDL_GetTicks();
-
-    float average = 4.0 * 1000.0 / (end - start);
-
-    vsync_enabled = 1;
-    if (average > 27 && average < 33) {
-        SDL_GL_SetSwapInterval(1);
-    } else if (average > 57 && average < 63) {
-        SDL_GL_SetSwapInterval(2);
-    } else if (average > 86 && average < 94) {
-        SDL_GL_SetSwapInterval(3);
-    } else if (average > 115 && average < 125) {
-        SDL_GL_SetSwapInterval(4);
-    } else {
-        vsync_enabled = 0;
-    }
-}
-
 static void gfx_sdl_init(const char *game_name, bool start_in_fullscreen) {
     SDL_Init(SDL_INIT_VIDEO);
 
@@ -178,9 +136,16 @@ static void gfx_sdl_init(const char *game_name, bool start_in_fullscreen) {
     SDL_GL_CreateContext(wnd);
 
     SDL_GL_SetSwapInterval(1);
-    test_vsync();
-    if (!vsync_enabled)
+
+    SDL_DisplayMode mode;
+    SDL_GetCurrentDisplayMode(0, &mode);
+
+    if (mode.refresh_rate % FRAME_RATE == 0) {
+        SDL_GL_SetSwapInterval(mode.refresh_rate / FRAME_RATE);
+    } else {
+        vsync_enabled = false;
         puts("Warning: VSync is not enabled or not working. Falling back to timer for synchronization");
+    }
 
     for (size_t i = 0; i < sizeof(windows_scancode_table) / sizeof(SDL_Scancode); i++) {
         inverted_scancode_table[windows_scancode_table[i]] = i;
@@ -278,7 +243,7 @@ static bool gfx_sdl_start_frame(void) {
 
 static void sync_framerate_with_timer(void) {
     // Number of milliseconds a frame should take (30 fps)
-    const Uint32 FRAME_TIME = 1000 / 30;
+    const Uint32 FRAME_TIME = 1000 / FRAME_RATE;
     static Uint32 last_time;
     Uint32 elapsed = SDL_GetTicks() - last_time;
 
