@@ -34,6 +34,8 @@ static int inverted_scancode_table[512];
 static int vsync_enabled = 0;
 static unsigned int window_width = DESIRED_SCREEN_WIDTH;
 static unsigned int window_height = DESIRED_SCREEN_HEIGHT;
+static Uint64 perf_sec;
+static Uint64 last_perf;
 static bool fullscreen_state;
 static void (*on_fullscreen_changed_callback)(bool is_now_fullscreen);
 static bool (*on_key_down_callback)(int scancode);
@@ -117,6 +119,8 @@ static void set_fullscreen(bool on, bool call_callback) {
 static void gfx_sdl_init(const char *game_name, bool start_in_fullscreen) {
     SDL_Init(SDL_INIT_VIDEO);
 
+    perf_sec = SDL_GetPerformanceFrequency();
+
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
@@ -134,20 +138,19 @@ static void gfx_sdl_init(const char *game_name, bool start_in_fullscreen) {
     }
 
     SDL_GL_CreateContext(wnd);
+    SDL_GL_SetSwapInterval(1);
 
     SDL_DisplayMode mode;
     SDL_GetCurrentDisplayMode(0, &mode);
 
+#ifndef __APPLE__
     if (mode.refresh_rate % FRAME_RATE == 0) {
         SDL_GL_SetSwapInterval(mode.refresh_rate / FRAME_RATE);
-#ifndef __APPLE__
-        vsync_enabled = true;
-#endif
     } else {
         vsync_enabled = false;
         puts("Warning: VSync is not enabled or not working. Falling back to timer for synchronization");
-        SDL_GL_SetSwapInterval(0);
     }
+#endif
 
     for (size_t i = 0; i < sizeof(windows_scancode_table) / sizeof(SDL_Scancode); i++) {
         inverted_scancode_table[windows_scancode_table[i]] = i;
@@ -240,18 +243,19 @@ static void gfx_sdl_handle_events(void) {
 }
 
 static bool gfx_sdl_start_frame(void) {
+    last_perf = SDL_GetPerformanceCounter();
     return true;
 }
 
 static void sync_framerate_with_timer(void) {
     // Number of milliseconds a frame should take (30 fps)
-    const Uint32 FRAME_TIME = 1000 / FRAME_RATE;
-    static Uint32 last_time;
-    Uint32 elapsed = SDL_GetTicks() - last_time;
+    const Uint64 FRAME_TIME = round(perf_sec / FRAME_RATE);
 
-    if (elapsed < FRAME_TIME)
-        SDL_Delay(FRAME_TIME - elapsed);
-    last_time += FRAME_TIME;
+    Uint32 elapsed = SDL_GetPerformanceCounter() - last_perf;
+    if (elapsed < FRAME_TIME) {
+        Uint32 delay_time = (FRAME_TIME - elapsed) / (perf_sec / 1000) - 1;
+        SDL_Delay(delay_time);
+    }
 }
 
 static void gfx_sdl_swap_buffers_begin(void) {
