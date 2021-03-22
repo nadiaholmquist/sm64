@@ -1905,15 +1905,6 @@ index b242ca8..7b6738a 100644
  
  static SDL_Window *wnd;
  static int inverted_scancode_table[512];
-@@ -245,7 +245,7 @@ static bool gfx_sdl_start_frame(void) {
- 
- static void sync_framerate_with_timer(void) {
-     // Number of milliseconds a frame should take (30 fps)
--    const Uint32 FRAME_TIME = 1000 / FRAME_RATE;
-+    const Uint32 FRAME_TIME = round(1000.0 / FRAME_RATE);
-     static Uint32 last_time;
-     Uint32 elapsed = SDL_GetTicks() - last_time;
- 
 diff --git a/src/pc/pc_main.c b/src/pc/pc_main.c
 index 17ff421..37d17c1 100644
 --- a/src/pc/pc_main.c

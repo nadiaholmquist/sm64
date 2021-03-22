@@ -143,14 +143,13 @@ static void gfx_sdl_init(const char *game_name, bool start_in_fullscreen) {
     SDL_DisplayMode mode;
     SDL_GetCurrentDisplayMode(0, &mode);
 
-#ifndef __APPLE__
     if (mode.refresh_rate % FRAME_RATE == 0) {
         SDL_GL_SetSwapInterval(mode.refresh_rate / FRAME_RATE);
+	vsync_enabled = false;
     } else {
         vsync_enabled = false;
         puts("Warning: VSync is not enabled or not working. Falling back to timer for synchronization");
     }
-#endif
 
     for (size_t i = 0; i < sizeof(windows_scancode_table) / sizeof(SDL_Scancode); i++) {
         inverted_scancode_table[windows_scancode_table[i]] = i;
