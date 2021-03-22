@@ -2,6 +2,7 @@
 #define CONFIGFILE_H
 
 extern bool         configFullscreen;
+extern bool         configEnableVSync;
 extern unsigned int configKeyA;
 extern unsigned int configKeyB;
 extern unsigned int configKeyStart;

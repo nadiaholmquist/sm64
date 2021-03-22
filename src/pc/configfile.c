@@ -30,6 +30,7 @@ struct ConfigOption {
  *Config options and default values
  */
 bool configFullscreen            = false;
+bool configEnableVSync           = true;
 // Keyboard mappings (scancode values)
 unsigned int configKeyA          = 0x26;
 unsigned int configKeyB          = 0x33;
@@ -44,7 +45,6 @@ unsigned int configKeyStickUp    = 0x11;
 unsigned int configKeyStickDown  = 0x1F;
 unsigned int configKeyStickLeft  = 0x1E;
 unsigned int configKeyStickRight = 0x20;
-
 
 static const struct ConfigOption options[] = {
     {.name = "fullscreen",     .type = CONFIG_TYPE_BOOL, .boolValue = &configFullscreen},
@@ -61,6 +61,7 @@ static const struct ConfigOption options[] = {
     {.name = "key_stickdown",  .type = CONFIG_TYPE_UINT, .uintValue = &configKeyStickDown},
     {.name = "key_stickleft",  .type = CONFIG_TYPE_UINT, .uintValue = &configKeyStickLeft},
     {.name = "key_stickright", .type = CONFIG_TYPE_UINT, .uintValue = &configKeyStickRight},
+    {.name = "enable_vsync", .type = CONFIG_TYPE_BOOL, .boolValue = &configEnableVSync},
 };
 
 // Reads an entire line from a file (excluding the newline character) and returns an allocated string

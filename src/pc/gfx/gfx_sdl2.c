@@ -1,4 +1,6 @@
+#include <stdbool.h>
 #include "../compat.h"
+#include "../configfile.h"
 
 #if !defined(__linux__) && !defined(__BSD__) && defined(ENABLE_OPENGL)
 
@@ -143,12 +145,14 @@ static void gfx_sdl_init(const char *game_name, bool start_in_fullscreen) {
     SDL_DisplayMode mode;
     SDL_GetCurrentDisplayMode(0, &mode);
 
-    if (mode.refresh_rate % FRAME_RATE == 0) {
-        SDL_GL_SetSwapInterval(mode.refresh_rate / FRAME_RATE);
-	vsync_enabled = false;
-    } else {
-        vsync_enabled = false;
-        puts("Warning: VSync is not enabled or not working. Falling back to timer for synchronization");
+    if (configEnableVSync) {
+	    if (mode.refresh_rate % FRAME_RATE == 0) {
+            SDL_GL_SetSwapInterval(mode.refresh_rate / FRAME_RATE);
+            vsync_enabled = true;
+	    } else {
+            vsync_enabled = false;
+            puts("Warning: VSync is not enabled or not working. Falling back to timer for synchronization");
+	    }
     }
 
     for (size_t i = 0; i < sizeof(windows_scancode_table) / sizeof(SDL_Scancode); i++) {
