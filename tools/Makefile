@@ -1,6 +1,6 @@
-CC := gcc-10
-CXX := g++-10
-CFLAGS := -I . -Wall -Wextra -Wno-unused-parameter -pedantic -std=c99 -O2 -s
+CC := gcc
+CXX := g++
+CFLAGS := -I . -Wall -Wextra -Wno-unused-parameter -pedantic -Wno-implicit-function-declaration -std=c99 -O2 -s
 LDFLAGS := -lm
 PROGRAMS := n64graphics n64graphics_ci mio0 n64cksum textconv patch_libultra_math aifc_decode aiff_extract_codebook vadpcm_enc tabledesign extract_data_for_mio skyconv
 
@@ -16,7 +16,7 @@ endif
 default: all
 
 armips: armips.cpp
-	$(CXX) $(CXXFLAGS) -fno-exceptions -fno-rtti -pipe $^ -o $@ -lpthread $(ARMIPS_FLAGS)
+	$(CXX) $(CXXFLAGS) -std=c++11 -fno-exceptions -fno-rtti -pipe $^ -o $@ -lpthread $(ARMIPS_FLAGS)
 
 n64graphics_SOURCES := n64graphics.c utils.c
 n64graphics_CFLAGS  := -DN64GRAPHICS_STANDALONE
@@ -53,6 +53,9 @@ $(LIBAUDIOFILE):
 	@$(MAKE) -C audiofile
 
 all: $(LIBAUDIOFILE) $(PROGRAMS) $(CXX_PROGRAMS)
+
+# Ensure libaudiofile is compiled first as some programs need it
+$(PROGRAMS): $(LIBAUDIOFILE)
 
 clean:
 	$(RM) $(PROGRAMS) $(CXX_PROGRAMS)

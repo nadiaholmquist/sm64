@@ -4,8 +4,10 @@
 #include "ultratypes.h"
 
 // Old deprecated functions from strings.h, replaced by memcpy/memset.
-#ifndef __APPLE__
+#ifndef bcopy
 extern void bcopy(const void *, void *, size_t);
+#endif
+#ifndef bzero
 extern void bzero(void *, size_t);
 #endif
 

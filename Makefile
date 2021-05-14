@@ -428,8 +428,8 @@ else # TARGET_N64
 
 AS := as
 ifneq ($(TARGET_WEB),1)
-  CC := gcc-10
-  CXX := g++-10
+  CC := clang
+  CXX := clang++
 else
   CC := emcc
 endif
@@ -438,7 +438,7 @@ ifeq ($(CXX_FILES),"")
 else
   LD := $(CXX)
 endif
-CPP := cpp-10 -P
+CPP := cpp-mp-11 -P
 OBJDUMP := objdump
 OBJCOPY := objcopy
 PYTHON := python3
@@ -451,7 +451,7 @@ endif
 ifeq ($(TARGET_MAC),1)
   PLATFORM_CFLAGS  := -DTARGET_MAC
   PLATFORM_LDFLAGS := -lm -lpthread
-  OBJCOPY := /usr/local/opt/binutils/bin/objcopy
+  OBJCOPY := x86_64-elf-objcopy
 endif
 ifeq ($(TARGET_LINUX),1)
   PLATFORM_CFLAGS  := -DTARGET_LINUX `pkg-config --cflags libusb-1.0`
