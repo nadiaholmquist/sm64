@@ -35,6 +35,10 @@ ifeq ($(TARGET_N64),0)
       TARGET_WINDOWS := 1
     else ifeq ($(shell uname -s),Darwin)
       TARGET_MAC := 1
+      MAC_ARCH = $(shell uname -m)
+      ifeq ($(MAC_ARCH),arm64)
+        MAC_ARCH := arm
+      endif
     else
       # TODO: Detect Mac OS X, BSD, etc. For now, assume Linux
       TARGET_LINUX := 1
@@ -433,12 +437,14 @@ ifneq ($(TARGET_WEB),1)
 else
   CC := emcc
 endif
+ifeq ($(TARGET_MAC),1)
+  CPP := cpp-mp-11 -P
+endif
 ifeq ($(CXX_FILES),"")
   LD := $(CC)
 else
   LD := $(CXX)
 endif
-CPP := cpp-mp-11 -P
 OBJDUMP := objdump
 OBJCOPY := objcopy
 PYTHON := python3
@@ -451,7 +457,7 @@ endif
 ifeq ($(TARGET_MAC),1)
   PLATFORM_CFLAGS  := -DTARGET_MAC
   PLATFORM_LDFLAGS := -lm -lpthread
-  OBJCOPY := x86_64-elf-objcopy
+  OBJCOPY := $(MAC_ARCH)-elf-objcopy
 endif
 ifeq ($(TARGET_LINUX),1)
   PLATFORM_CFLAGS  := -DTARGET_LINUX `pkg-config --cflags libusb-1.0`
@@ -502,7 +508,7 @@ CFLAGS := $(OPT_FLAGS) $(INCLUDE_CFLAGS) -D_LANGUAGE_C $(VERSION_CFLAGS) $(MATCH
 ASFLAGS := -I include -I $(BUILD_DIR) $(VERSION_ASFLAGS)
 
 ifeq ($(TARGET_MAC),1)
-  ASFLAGS += -target $(shell uname -m)-elf
+  ASFLAGS += -target $(MAC_ARCH)-elf
 endif
 
 LDFLAGS := $(PLATFORM_LDFLAGS) $(GFX_LDFLAGS)
