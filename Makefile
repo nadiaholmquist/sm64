@@ -306,13 +306,17 @@ endif
 IQUE_EGCS_PATH := $(TOOLS_DIR)/ique_egcs
 IQUE_LD_PATH := $(TOOLS_DIR)/ique_ld
 
+EXTRA_LDFLAGS := 
+
 # detect prefix for MIPS toolchain
 ifneq      ($(call find-command,mips-linux-gnu-ld),)
   CROSS := mips-linux-gnu-
 else ifneq ($(call find-command,mips64-linux-gnu-ld),)
   CROSS := mips64-linux-gnu-
+  EXTRA_LDFLAGS := -m elf32btsmip
 else ifneq ($(call find-command,mips64-elf-ld),)
   CROSS := mips64-elf-
+  EXTRA_LDFLAGS := -m elf32btsmip
 else
   $(error Unable to detect a suitable MIPS toolchain installed)
 endif
@@ -336,7 +340,7 @@ endif
 ifeq ($(VERSION),cn)
   LD          := LD_LIBRARY_PATH=$(IQUE_LD_PATH) $(IQUE_LD_PATH)/mips64-elf-ld
 else
-  LD          := $(CROSS)ld
+  LD          := $(CROSS)ld $(EXTRA_LDFLAGS)
 endif
 AR            := $(CROSS)ar
 OBJDUMP       := $(CROSS)objdump
