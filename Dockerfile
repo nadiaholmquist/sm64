@@ -1,4 +1,4 @@
-FROM devkitpro/devkitarm:latest as build
+FROM devkitpro/devkitarm:20240511 as build
 
 RUN apt update
 RUN apt -y install build-essential bsdmainutils sox
