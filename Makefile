@@ -23,7 +23,7 @@ TARGET_N64 ?= 1
 #   ido - uses the SGI IRIS Development Option compiler, which is used to build
 #         an original matching N64 ROM
 #   gcc - uses the GNU C Compiler
-COMPILER ?= ido
+COMPILER ?= gcc
 $(eval $(call validate-option,COMPILER,ido gcc))
 
 
@@ -45,7 +45,7 @@ ifeq      ($(VERSION),jp)
 else ifeq ($(VERSION),us)
   DEFINES   += VERSION_US=1
   OPT_FLAGS := -g
-  GRUCODE   ?= f3d_old
+  GRUCODE   ?= f3dex2
   VERSION_JP_US  ?= true
   VERSION_SH_CN  ?= false
 else ifeq ($(VERSION),eu)
@@ -112,7 +112,7 @@ ifeq      ($(COMPILER),ido)
 else ifeq ($(COMPILER),gcc)
   NON_MATCHING := 1
   MIPSISET     := -mips3
-  OPT_FLAGS    := -O2
+  OPT_FLAGS    := -g
 endif
 
 
@@ -343,7 +343,7 @@ OBJDUMP       := $(CROSS)objdump
 OBJCOPY       := $(CROSS)objcopy
 
 ifeq ($(TARGET_N64),1)
-  TARGET_CFLAGS := -nostdinc -DTARGET_N64 -D_LANGUAGE_C
+  TARGET_CFLAGS := -nostdinc -DTARGET_N64 -D_LANGUAGE_C #-fdata-sections
   CC_CFLAGS := -fno-builtin
 endif
 
@@ -423,7 +423,8 @@ export LANG := C
 #==============================================================================#
 
 # N64 tools
-MIO0TOOL              := $(TOOLS_DIR)/sm64tools/mio0
+#MIO0TOOL              := $(TOOLS_DIR)/sm64tools/mio0
+MIO0TOOL              := cp
 N64CKSUM              := $(TOOLS_DIR)/sm64tools/n64cksum
 N64GRAPHICS           := $(TOOLS_DIR)/sm64tools/n64graphics
 N64GRAPHICS_CI        := $(TOOLS_DIR)/sm64tools/n64graphics_ci

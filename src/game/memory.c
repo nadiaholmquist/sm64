@@ -325,6 +325,10 @@ void *load_to_fixed_pool_addr(u8 *destAddr, u8 *srcStart, u8 *srcEnd) {
  * base address of segment to this address.
  */
 void *load_segment_decompress(s32 segment, u8 *srcStart, u8 *srcEnd) {
+    load_segment(segment, srcStart, srcEnd, MEMORY_POOL_LEFT);
+}
+
+/*void *load_segment_decompress(s32 segment, u8 *srcStart, u8 *srcEnd) {
     void *dest = NULL;
 
     u32 compSize = ALIGN16(srcEnd - srcStart);
@@ -348,9 +352,15 @@ void *load_segment_decompress(s32 segment, u8 *srcStart, u8 *srcEnd) {
     } else {
     }
     return dest;
-}
+}*/
 
 void *load_segment_decompress_heap(u32 segment, u8 *srcStart, u8 *srcEnd) {
+    dma_read(gDecompressionHeap, srcStart, srcEnd);
+    set_segment_base_addr(segment, gDecompressionHeap);
+    return gDecompressionHeap;
+}
+
+/*void *load_segment_decompress_heap(u32 segment, u8 *srcStart, u8 *srcEnd) {
     UNUSED void *dest = NULL;
     u32 compSize = ALIGN16(srcEnd - srcStart);
     u8 *compressed = main_pool_alloc(compSize, MEMORY_POOL_RIGHT);
@@ -364,7 +374,7 @@ void *load_segment_decompress_heap(u32 segment, u8 *srcStart, u8 *srcEnd) {
     } else {
     }
     return gDecompressionHeap;
-}
+}*/
 
 void load_engine_code_segment(void) {
     void *startAddr = (void *) SEG_ENGINE;

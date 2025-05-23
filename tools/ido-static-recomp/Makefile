@@ -37,7 +37,7 @@ else ifeq ($(UNAME_S),Linux)
   DETECTED_OS := linux
 else ifeq ($(UNAME_S),Darwin)
   DETECTED_OS := macos
-  MAKE := gmake
+  #MAKE := gmake
   CPPFLAGS += -xc++
 else
   $(error Unsupported host OS for Makefile)

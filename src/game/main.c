@@ -36,6 +36,7 @@ OSMesgQueue gIntrMesgQueue;
 OSMesgQueue gSPTaskMesgQueue;
 
 OSMesg gDmaMesgBuf[1];
+__attribute__((aligned (0x100)))
 OSMesg gPIMesgBuf[32];
 OSMesg gSIEventMesgBuf[1];
 OSMesg gIntrMesgBuf[16];
