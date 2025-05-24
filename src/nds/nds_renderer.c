@@ -94,13 +94,18 @@ u64 rspF3DDataStart[] = {};
 
 struct Sprite sprites[MAX_SPRITES];
 
+// TODO adapt this for BlocksDS's libnds
+
+/*
 struct {
     const void *texture;
     gl_texture_data *tex;
 } glTexQueue[128];
+*/
 
 static uint8_t glTexCount;
 static void glTexSync();
+/*
 
 // This is a modified (and simplified) version of glTexImage2D from libnds
 // The original updates texture VRAM right away, which causes tearing when done mid-frame
@@ -197,6 +202,11 @@ static void glTexSync() {
 
     glTexCount = 0;
 }
+*/
+
+#define glTexImage2DAsync glTexImage2D
+#define glTexSync() {}
+
 
 static void load_texture() {
     // Look up the current texture using a simple hash calculated from its address
