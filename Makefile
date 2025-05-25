@@ -79,7 +79,10 @@ ifeq ($(TARGET_NDS),1)
   BLOCKSDSEXT         ?= /opt/blocksds/external
   NDSTOOL             ?= $(BLOCKSDS)/tools/ndstool/ndstool
   GRIT                ?= $(BLOCKSDS)/tools/grit/grit
-  SOX                 ?= sox
+  SOX                 ?= $(call find-command,wf-sox)
+  ifeq (, $(SOX))
+    SOX               := sox
+  endif
 endif
 
 TARGET := sm64.$(VERSION)
