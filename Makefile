@@ -477,8 +477,8 @@ endif
 ifeq ($(TARGET_NDS),1)
 
 LIBDIRS := $(BLOCKSDS)/libs/libnds
-TARGET_CFLAGS := -march=armv5te -mtune=arm946e-s -Wno-error=incompatible-pointer-types -Wno-error=implicit-function-declaration -Wno-error=int-conversion $(foreach dir,$(LIBDIRS),-I$(dir)/include) -DTARGET_NDS -DARM9 -D_LANGUAGE_C -DNO_SEGMENTED_MEMORY #-DENABLE_FPS
-ARM7_TARGET_CFLAGS := -mcpu=arm7tdmi -mtune=arm7tdmi -Wno-error=implicit-function-declaration $(foreach dir,$(LIBDIRS),-I$(dir)/include) -DTARGET_NDS -DARM7 -D_LANGUAGE_C
+TARGET_CFLAGS := -mcpu=arm946e-s+nofp -Wno-error=incompatible-pointer-types -Wno-error=implicit-function-declaration -Wno-error=int-conversion $(foreach dir,$(LIBDIRS),-I$(dir)/include) -DTARGET_NDS -DARM9 -D_LANGUAGE_C -DNO_SEGMENTED_MEMORY #-DENABLE_FPS
+ARM7_TARGET_CFLAGS := -mcpu=arm7tdmi -Wno-error=implicit-function-declaration $(foreach dir,$(LIBDIRS),-I$(dir)/include) -DTARGET_NDS -DARM7 -D_LANGUAGE_C
 
 CC_CHECK := $(CC)
 CC_CHECK_CFLAGS := -fsyntax-only -fsigned-char $(CC_CFLAGS) $(TARGET_CFLAGS) -Wall -Wextra -Wno-format-security -DNON_MATCHING -DAVOID_UB $(DEF_INC_CFLAGS)
@@ -486,10 +486,10 @@ ARM7_CC_CHECK_CFLAGS := -fsyntax-only -fsigned-char $(CC_CFLAGS) $(ARM7_TARGET_C
 
 ASFLAGS := $(foreach i,$(INCLUDE_DIRS),-I$(i)) $(foreach d,$(DEFINES),--defsym $(d))
 CFLAGS := -fno-strict-aliasing -fwrapv $(OPT_FLAGS) $(TARGET_CFLAGS) $(DEF_INC_CFLAGS)
-LDFLAGS := -lc -lnds9 -specs=$(BLOCKSDS)/sys/crts/dsi_arm9.specs -g -mthumb -mthumb-interwork $(foreach dir,$(LIBDIRS),-L$(dir)/lib) $(TARGET_CFLAGS)
+LDFLAGS := -Wl,--start-group -lc -lnds9 -Wl,--end-group -specs=$(BLOCKSDS)/sys/crts/dsi_arm9.specs -g $(foreach dir,$(LIBDIRS),-L$(dir)/lib) $(TARGET_CFLAGS)
 
 ARM7_CFLAGS := -fno-strict-aliasing -fwrapv $(OPT_FLAGS) $(ARM7_TARGET_CFLAGS) $(DEF_INC_CFLAGS)
-ARM7_LDFLAGS := -lc -lnds7 -specs=$(BLOCKSDS)/sys/crts/ds_arm7.specs -g -mthumb-interwork $(foreach dir,$(LIBDIRS),-L$(dir)/lib) $(ARM7_TARGET_CFLAGS)
+ARM7_LDFLAGS := -Wl,--start-group -lc -lnds7 -Wl,--end-group -specs=$(BLOCKSDS)/sys/crts/ds_arm7.specs -g $(foreach dir,$(LIBDIRS),-L$(dir)/lib) $(ARM7_TARGET_CFLAGS)
 
 else
 
