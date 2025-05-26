@@ -1,8 +1,6 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define USE_EXT_RAM 1
-
 /**
  * @file config.h
  * A catch-all file for configuring various bugfixes and other settings

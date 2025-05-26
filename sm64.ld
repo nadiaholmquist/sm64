@@ -1,15 +1,23 @@
 OUTPUT_ARCH (mips)
 
+ENTRY(entry_point)
+
+#define RDRAM_START       0x80000000
+#ifdef USE_EXT_RAM
+#ifdef VERSION_CN
+#define RDRAM_SIZE        0x7C0000 // iQue has stuff like EEPROM mapped at 807C0000 onwards. TODO: Code this using osMemSize
+#else
+#define RDRAM_SIZE        0x800000
+#endif
+#else
+#define RDRAM_SIZE        0x400000
+#endif
+
+#define RDRAM_END         RDRAM_START + RDRAM_SIZE
+
 /* include/segments.h defines SEG_POOL_START, SEG_POOL_END, SEG_BUFFERS,
  * SEG_GODDARD, SEG_ENGINE, SEG_FRAMEBUFFERS */
-#include "segments.h"
 #include "config.h"
-
-#ifndef USE_EXT_RAM
-#define ADDR_OR_ALIGN(addr) (addr)
-#else
-#define ADDR_OR_ALIGN(addr) ALIGN(0x1000)
-#endif
 
 #define BEGIN_SEG(name, addr) \
     _##name##SegmentStart = ADDR(.name); \
@@ -31,7 +39,7 @@ OUTPUT_ARCH (mips)
 #define MIO0_SEG(name, segAddr) \
     BEGIN_SEG(name##_mio0, segAddr) \
     { \
-        BUILD_DIR/bin/name.mio0.o(.data*); \
+        KEEP(BUILD_DIR/bin/name.mio0.o(.data*)); \
         . = ALIGN(0x10); \
     } \
     END_SEG(name##_mio0)
@@ -39,7 +47,7 @@ OUTPUT_ARCH (mips)
 #define MIO0_EU_SEG(name, segAddr) \
     BEGIN_SEG(name##_mio0, segAddr) \
     { \
-        BUILD_DIR/bin/eu/name.mio0.o(.data*); \
+        KEEP(BUILD_DIR/bin/eu/name.mio0.o(.data*)); \
         . = ALIGN(0x10); \
     } \
     END_SEG(name##_mio0)
@@ -47,7 +55,7 @@ OUTPUT_ARCH (mips)
 #define STANDARD_LEVEL(name) \
     BEGIN_SEG(name##_segment_7, 0x07000000) \
     { \
-        BUILD_DIR/levels/name/leveldata.mio0.o(.data*); \
+        KEEP(BUILD_DIR/levels/name/leveldata.mio0.o(.data*)); \
         . = ALIGN(0x10); \
     } \
     END_SEG(name##_segment_7) \
@@ -61,7 +69,7 @@ OUTPUT_ARCH (mips)
 #define STANDARD_OBJECTS(name, segAddr, geoAddr) \
     BEGIN_SEG(name##_mio0, segAddr) \
     { \
-        BUILD_DIR/actors/name.mio0.o(.data*); \
+        KEEP(BUILD_DIR/actors/name.mio0.o(.data*)); \
         . = ALIGN(0x10); \
     } \
     END_SEG(name##_mio0) \
@@ -81,55 +89,33 @@ SECTIONS
 
     BEGIN_SEG(boot, 0x04000000)
     {
-        BUILD_DIR/asm/rom_header.o(.text*);
-        BUILD_DIR/asm/boot.o(.text*);
-        BUILD_DIR/asm/ipl3_font.o(.text*);
+        KEEP(BUILD_DIR/asm/rom_header.o(.text*));
+        KEEP(BUILD_DIR/asm/boot.o(.text*));
+        KEEP(BUILD_DIR/asm/ipl3_font.o(.text*));
     }
     END_SEG(boot)
 
     . = 0x80000400;
-    BEGIN_NOLOAD(zbuffer) {
+    BEGIN_NOLOAD(zbuffer)
+    {
         BUILD_DIR/src/buffers/zbuffer.o(.bss*);
     }
 
-#ifdef VERSION_CN
-    gZBufferEnd = .;
-#endif
-
-    . = SEG_BUFFERS;
     BEGIN_NOLOAD(buffers)
     {
         BUILD_DIR/src/buffers/buffers.o(.bss*);
-#if defined(VERSION_SH) || defined(VERSION_CN)
         BUILD_DIR/src/audio/port_sh.o(.bss*);
-#else
         BUILD_DIR/src/audio/globals_start.o(.bss*);
         BUILD_DIR/src/audio/synthesis.o(.bss*);
         BUILD_DIR/src/audio/heap.o(.bss*);
         BUILD_DIR/src/audio/load.o(.bss*);
         BUILD_DIR/src/audio/data.o(.bss*);
-#endif
-
-#ifdef VERSION_EU
-        . = ALIGN(0x200);
-#else
         . = ALIGN(0x1000);
-#endif
-#if defined(VERSION_SH) || defined(VERSION_CN)
-        . += 0xB000;
-#endif
         BUILD_DIR/src/buffers/gfx_output_buffer.o(.bss*);
     }
     END_NOLOAD(buffers)
 
-    /* lib/src/__osDevMgrMain.c and lib/src/osCreateViManager.c contain infinite
-     * loops compiled without -g, which cause the return statements and the .o
-     * files themselves to be aligned to 32-byte boundaries. But the linker
-     * Nintendo used did not respect .o file alignment, and aligned the files
-     * only to 16 bytes, in some cases misaligning them. We force the same to
-     * happen using the SUBALIGN directive. This is harmless; the alignment is
-     * just an optimization. */
-    BEGIN_SEG(main, ) SUBALIGN(16)
+    BEGIN_SEG(main, )
     {
         BUILD_DIR/asm/entry.o(.text*);
         BUILD_DIR/asm/decompress.o(.text*);
@@ -175,7 +161,7 @@ SECTIONS
 
     CREATE_LO_HI_PAIR(_mainSegmentNoloadSize, SIZEOF (.main.noload))
 
-    BEGIN_SEG(engine, ADDR_OR_ALIGN(SEG_ENGINE))
+    BEGIN_SEG(engine, ALIGN(0x1000))
     {
         BUILD_DIR/src/engine*.o(.text*);
         /* data */
@@ -192,16 +178,20 @@ SECTIONS
     }
     END_NOLOAD(engine)
 
-    . = ADDR_OR_ALIGN(SEG_FRAMEBUFFERS);
+    . = ALIGN(0x1000);
     BEGIN_NOLOAD(framebuffers)
     {
-        BUILD_DIR/src/buffers/framebuffers.o(.bss*);
+        KEEP(BUILD_DIR/src/buffers/framebuffers.o(.bss*));
     }
     END_NOLOAD(framebuffers)
 
+    /* Start of memory segments */
+    _poolStart = _framebuffersSegmentNoloadEnd;
+    _poolEnd   = RDRAM_END;
+
     BEGIN_SEG(entry, 0x10000000)
     {
-        BUILD_DIR/levels/entry.o(.data*);
+        KEEP(BUILD_DIR/levels/entry.o(.data*));
     }
     END_SEG(entry)
 
@@ -242,12 +232,12 @@ SECTIONS
     /* use segmented addressing for behaviors */
     BEGIN_SEG(behavior, 0x13000000)
     {
-        BUILD_DIR/data/behavior_data.o(.data*);
+        KEEP(BUILD_DIR/data/behavior_data.o(.data*));
     }
     END_SEG(behavior)
 
-    /* 0x8016F000 21D7D0-255EC0 [386F0] */
-    BEGIN_SEG(goddard, SEG_GODDARD)
+    /* Place goddard at the end of the pool, aligned to 0x1000 */
+    BEGIN_SEG(goddard, (_poolEnd - SIZEOF(.goddard) - SIZEOF(.goddard.noload)) & ~0xFFF)
     {
         BUILD_DIR/src/menu*.o(.text*);
         BUILD_DIR/libgoddard.a:*.o(.text*);
@@ -283,21 +273,21 @@ SECTIONS
     END_SEG(goddard)
     BEGIN_NOLOAD(goddard)
     {
-        BUILD_DIR/src/menu*.o(.bss*);
-        BUILD_DIR/libgoddard.a:*.o(.bss*);
+        KEEP(BUILD_DIR/src/menu*.o(.bss*));
+        KEEP(BUILD_DIR/libgoddard.a:*.o(.bss*));
     }
     END_NOLOAD(goddard)
 
     /* 0x268020 0x268020-0 [0] */
     BEGIN_SEG(intro, 0x14000000)
     {
-        BUILD_DIR/levels/intro/script.o(.data*);
-        BUILD_DIR/levels/intro/geo.o(.data*);
+        KEEP(BUILD_DIR/levels/intro/script.o(.data*));
+        KEEP(BUILD_DIR/levels/intro/geo.o(.data*));
     }
     END_SEG(intro)
     BEGIN_SEG(intro_segment_7, 0x07000000)
     {
-        BUILD_DIR/levels/intro/leveldata.mio0.o(.data*);
+        KEEP(BUILD_DIR/levels/intro/leveldata.mio0.o(.data*));
         . = ALIGN(0x10);
     }
     END_SEG(intro_segment_7)
@@ -332,20 +322,20 @@ SECTIONS
 
     BEGIN_SEG(menu, 0x14000000)
     {
-        BUILD_DIR/levels/menu/script.o(.data*);
-        BUILD_DIR/levels/menu/geo.o(.data*);
+        KEEP(BUILD_DIR/levels/menu/script.o(.data*));
+        KEEP(BUILD_DIR/levels/menu/geo.o(.data*));
     }
     END_SEG(menu)
     BEGIN_SEG(menu_segment_7, 0x07000000)
     {
-        BUILD_DIR/levels/menu/leveldata.mio0.o(.data*);
+        KEEP(BUILD_DIR/levels/menu/leveldata.mio0.o(.data*));
         . = ALIGN(0x10);
     }
     END_SEG(menu_segment_7)
 
     BEGIN_SEG(scripts, 0x15000000)
     {
-        BUILD_DIR/levels/scripts.o(.data*);
+        KEEP(BUILD_DIR/levels/scripts.o(.data*));
     }
     END_SEG(scripts)
 
@@ -386,10 +376,10 @@ SECTIONS
     /* 4E9FA0-? [?] */
     BEGIN_SEG(assets, __romPos)
     {
-        BUILD_DIR/assets/mario_anim_data.o(.data*);
-        BUILD_DIR/assets/mario_anim_data.o(.rodata*);
-        BUILD_DIR/assets/demo_data.o(.data*);
-        BUILD_DIR/sound/sound_data.o(.data*);
+        KEEP(BUILD_DIR/assets/mario_anim_data.o(.data*));
+        KEEP(BUILD_DIR/assets/mario_anim_data.o(.rodata*));
+        KEEP(BUILD_DIR/assets/demo_data.o(.data*));
+        KEEP(BUILD_DIR/sound/sound_data.o(.data*));
     }
     END_SEG(assets)
 
@@ -398,9 +388,4 @@ SECTIONS
     {
         *(*);
     }
-
-    ASSERT((_goddardSegmentNoloadEnd <= SEG_POOL_END), "Error: menu segment extended past pool end")
-    ASSERT((_mainSegmentNoloadEnd <= _engineSegmentStart), "Error: main segment extended into engine.")
-    ASSERT((_engineSegmentNoloadEnd <= _framebuffersSegmentNoloadStart), "Error: engine segment extended into framebuffers.")
-    ASSERT((_framebuffersSegmentNoloadEnd <= RDRAM_END), "Error: framebuffers segment extended past RDRAM end")
 }

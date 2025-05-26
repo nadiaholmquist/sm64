@@ -8,7 +8,6 @@
 #include "sound_init.h"
 #include "profiler.h"
 #include "buffers/buffers.h"
-#include "segments.h"
 #include "segment_symbols.h"
 #include "main.h"
 #include "rumble_init.h"
@@ -36,7 +35,7 @@ OSMesgQueue gIntrMesgQueue;
 OSMesgQueue gSPTaskMesgQueue;
 
 OSMesg gDmaMesgBuf[1];
-__attribute__((aligned (0x100)))
+__attribute__((aligned(0x100)))
 OSMesg gPIMesgBuf[32];
 OSMesg gSIEventMesgBuf[1];
 OSMesg gIntrMesgBuf[16];
@@ -130,8 +129,8 @@ void setup_mesg_queues(void) {
 }
 
 void alloc_pool(void) {
-    void *start = (void *) SEG_POOL_START;
-    void *end = (void *) SEG_POOL_END;
+    void *start = _poolStart;
+    void *end = _poolEnd;
 
     main_pool_init(start, end);
     gEffectsMemoryPool = mem_pool_init(0x4000, MEMORY_POOL_LEFT);

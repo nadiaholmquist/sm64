@@ -43,11 +43,11 @@ DECLARE_SEGMENT(goddard)
 
 extern u8 _goddardSegmentStart[];
 
-#ifdef USE_EXT_RAM
 extern u8 _engineSegmentStart[];
 extern u8 _framebuffersSegmentNoloadStart[];
 extern u8 _framebuffersSegmentNoloadEnd[];
-#endif
+extern u8 _poolStart[];
+extern u8 _poolEnd[];
 
 DECLARE_LEVEL_SEGMENT(menu)
 DECLARE_LEVEL_SEGMENT(intro)

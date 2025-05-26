@@ -10,7 +10,6 @@
 #include "game_init.h"
 #include "main.h"
 #include "memory.h"
-#include "segments.h"
 #include "segment_symbols.h"
 
 // round up to the next multiple
@@ -114,11 +113,7 @@ void move_segment_table_to_dmem(void) {
  * freeing the object that was most recently allocated from a side.
  */
 void main_pool_init(UNUSED_CN void *start, void *end) {
-#if defined(VERSION_CN) && !defined(USE_EXT_RAM)
-    sPoolStart = (u8 *) ALIGN16((uintptr_t) &gZBufferEnd) + 16;
-#else
     sPoolStart = (u8 *) ALIGN16((uintptr_t) start) + 16;
-#endif
     sPoolEnd = (u8 *) ALIGN16((uintptr_t) end - 15) - 16;
     sPoolFreeSpace = sPoolEnd - sPoolStart;
 
@@ -377,8 +372,8 @@ void *load_segment_decompress_heap(u32 segment, u8 *srcStart, u8 *srcEnd) {
 }*/
 
 void load_engine_code_segment(void) {
-    void *startAddr = (void *) SEG_ENGINE;
-    u32 totalSize = SEG_FRAMEBUFFERS - SEG_ENGINE;
+    void *startAddr = _engineSegmentStart;
+    u32 totalSize = _framebuffersSegmentNoloadStart - _engineSegmentStart;
     UNUSED u32 alignedSize = ALIGN16(_engineSegmentRomEnd - _engineSegmentRomStart);
 
     bzero(startAddr, totalSize);
