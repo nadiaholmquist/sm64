@@ -184,7 +184,7 @@ SECTIONS
     . = ALIGN(0x1000);
     BEGIN_NOLOAD(framebuffers)
     {
-        KEEP(BUILD_DIR/src/buffers/framebuffers.o(.bss*));
+        BUILD_DIR/src/buffers/framebuffers.o(.bss*);
     }
     END_NOLOAD(framebuffers)
 
@@ -194,7 +194,7 @@ SECTIONS
 
     BEGIN_SEG(entry, 0x10000000)
     {
-        KEEP(BUILD_DIR/levels/entry.o(.data*));
+        BUILD_DIR/levels/entry.o(.data*);
     }
     END_SEG(entry)
 
@@ -235,7 +235,7 @@ SECTIONS
     /* use segmented addressing for behaviors */
     BEGIN_SEG(behavior, 0x13000000)
     {
-        KEEP(BUILD_DIR/data/behavior_data.o(.data*));
+        BUILD_DIR/data/behavior_data.o(.data*);
     }
     END_SEG(behavior)
 
@@ -276,16 +276,16 @@ SECTIONS
     END_SEG(goddard)
     BEGIN_NOLOAD(goddard)
     {
-        KEEP(BUILD_DIR/src/menu*.o(.bss*));
-        KEEP(BUILD_DIR/libgoddard.a:*.o(.bss*));
+        BUILD_DIR/src/menu*.o(.bss*);
+        BUILD_DIR/libgoddard.a:*.o(.bss*);
     }
     END_NOLOAD(goddard)
 
     /* 0x268020 0x268020-0 [0] */
     BEGIN_SEG(intro, 0x14000000)
     {
-        KEEP(BUILD_DIR/levels/intro/script.o(.data*));
-        KEEP(BUILD_DIR/levels/intro/geo.o(.data*));
+        BUILD_DIR/levels/intro/script.o(.data*);
+        BUILD_DIR/levels/intro/geo.o(.data*);
     }
     END_SEG(intro)
     BEGIN_SEG(intro_segment_7, 0x07000000)
@@ -301,21 +301,8 @@ SECTIONS
     /* 271B20-2A42A0 [32780] */
     BEGIN_SEG(gd_dynlists, 0x04000000)
     {
-        BUILD_DIR/libgoddard.a:dynlist_test_cube.o(.data*);
-        BUILD_DIR/libgoddard.a:dynlist_unused.o(.data*);
-        BUILD_DIR/libgoddard.a:dynlist_mario_face.o(.data*);
-        BUILD_DIR/libgoddard.a:dynlists_mario_eyes.o(.data*);
-        BUILD_DIR/libgoddard.a:dynlists_mario_eyebrows_mustache.o(.data*);
-        BUILD_DIR/libgoddard.a:dynlist_mario_master.o(.data*);
-        BUILD_DIR/libgoddard.a:anim_mario_mustache_right.o(.data*);
-        BUILD_DIR/libgoddard.a:anim_mario_mustache_left.o(.data*);
-        BUILD_DIR/libgoddard.a:anim_mario_lips_1.o(.data*);
-        BUILD_DIR/libgoddard.a:anim_mario_lips_2.o(.data*);
-        BUILD_DIR/libgoddard.a:anim_mario_eyebrows_1.o(.data*);
-        BUILD_DIR/libgoddard.a:anim_group_1.o(.data*);
-        BUILD_DIR/libgoddard.a:anim_group_2.o(.data*);
-        BUILD_DIR/libgoddard.a:dynlist_test_cube.o(.rodata*);
-        BUILD_DIR/libgoddard.a:dynlist_unused.o(.rodata*);
+        BUILD_DIR/libgoddard.a:dynlist_*(.data*);
+        BUILD_DIR/libgoddard.a:anim_*(.data*);
         BUILD_DIR/libgoddard.a:*.o(.data*);
         BUILD_DIR/libgoddard.a:*.o(.rodata*);
     }
@@ -325,8 +312,8 @@ SECTIONS
 
     BEGIN_SEG(menu, 0x14000000)
     {
-        KEEP(BUILD_DIR/levels/menu/script.o(.data*));
-        KEEP(BUILD_DIR/levels/menu/geo.o(.data*));
+        BUILD_DIR/levels/menu/script.o(.data*);
+        BUILD_DIR/levels/menu/geo.o(.data*);
     }
     END_SEG(menu)
     BEGIN_SEG(menu_segment_7, 0x07000000)
@@ -338,7 +325,7 @@ SECTIONS
 
     BEGIN_SEG(scripts, 0x15000000)
     {
-        KEEP(BUILD_DIR/levels/scripts.o(.data*));
+        BUILD_DIR/levels/scripts.o(.data*);
     }
     END_SEG(scripts)
 
@@ -379,10 +366,10 @@ SECTIONS
     /* 4E9FA0-? [?] */
     BEGIN_SEG(assets, __romPos)
     {
-        KEEP(BUILD_DIR/assets/mario_anim_data.o(.data*));
-        KEEP(BUILD_DIR/assets/mario_anim_data.o(.rodata*));
-        KEEP(BUILD_DIR/assets/demo_data.o(.data*));
-        KEEP(BUILD_DIR/sound/sound_data.o(.data*));
+        BUILD_DIR/assets/mario_anim_data.o(.data*);
+        BUILD_DIR/assets/mario_anim_data.o(.rodata*);
+        BUILD_DIR/assets/demo_data.o(.data*);
+        BUILD_DIR/sound/sound_data.o(.data*);
     }
     END_SEG(assets)
 
