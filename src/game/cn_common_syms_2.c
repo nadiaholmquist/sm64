@@ -84,6 +84,7 @@ struct Area {
 
 FORCE_BSS struct HudDisplay gHudDisplay;
 FORCE_BSS OSThread __osThreadSave;
+__attribute__((aligned(8)))
 FORCE_BSS OSPifRam __osContPifRam;
 FORCE_BSS OSPiHandle __Dom2SpeedParam;
 FORCE_BSS struct SpawnInfo gPlayerSpawnInfos[1];

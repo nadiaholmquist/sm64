@@ -17,6 +17,9 @@ extern __osExceptionVector __osExceptionPreamble;
 extern u32 __osSetHWintrRoutine(OSHWIntr, s32 (*));
 extern s32 __osLeoInterrupt(void);
 #endif
+#if defined(VERSION_CN)
+extern void __osSetWatchLo(u32);
+#endif
 
 u32 __osFinalrom; // maybe initialized?
 u64 osClockRate = OS_CLOCK_RATE;

@@ -47,27 +47,20 @@ ifeq ($(HOST_ENV),MinGW)
   armips_LDFLAGS += -municode
 endif
 
-all-except-recomp: $(LIBAUDIOFILE) $(BUILD_PROGRAMS)
-
-all: all-except-recomp ido-static-recomp
+all: $(LIBAUDIOFILE) $(BUILD_PROGRAMS)
 
 clean:
 	$(RM) $(ALL_PROGRAMS)
 	$(MAKE) -C audiofile clean
-	$(MAKE) -C ido-static-recomp clean
 
 define COMPILE
 $(1): $($1_SOURCES)
 	$$(CC) $(CFLAGS) $($1_CFLAGS) $$^ -o $$@ $($1_LDFLAGS) $(LDFLAGS)
 endef
 
-ido-static-recomp:
-	@$(MAKE) -C ido-static-recomp setup
-	@$(MAKE) -C ido-static-recomp
-
 $(foreach p,$(BUILD_PROGRAMS),$(eval $(call COMPILE,$(p))))
 
 $(LIBAUDIOFILE):
 	@$(MAKE) -C audiofile
 
-.PHONY: all all-except-recomp clean default ido-static-recomp
+.PHONY: all clean default

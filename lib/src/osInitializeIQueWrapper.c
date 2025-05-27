@@ -2,6 +2,10 @@
 #include "PR/os.h"
 
 #ifdef VERSION_CN
+
+extern void __osInitialize_common(void);
+extern void __osInitialize_autodetect(void);
+
 s32 osMotorStart(OSPfs *pfs) {
     return __osMotorAccess(pfs, MOTOR_START);
 }

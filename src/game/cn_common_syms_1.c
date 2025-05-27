@@ -26,4 +26,5 @@ FORCE_BSS s8 gRedCoinsCollected;
 FORCE_BSS s16 gSavedCourseNum;
 FORCE_BSS u32 __osFinalrom;
 FORCE_BSS s16 gCurrCourseNum;
+FORCE_BSS OSThread *__osRunningThread;
 #endif

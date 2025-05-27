@@ -90,7 +90,7 @@
 #define __AND_CLOBBER_CC , "cc"
 #endif /* __GNUC__ < 2 */
 
-#if defined (__mips__)
+#if 0 && defined (__mips__)
 #define umul_ppmm(w1, w0, u, v) \
   __asm__ ("multu %2,%3"						\
 	   : "=l" ((USItype) (w0)),					\

@@ -124,16 +124,19 @@ SECTIONS
         BUILD_DIR/src/audio*.o(.text*);
         BUILD_DIR/lib/rsp.o(.text*);
         BUILD_DIR/libultra.a:*.o(.text*);
+        BUILD_DIR/libgcc.a:*.o(.text*);
 
         /* data */
         BUILD_DIR/src/game*.o(.data*);
         BUILD_DIR/src/audio*.o(.data*);
         BUILD_DIR/libultra.a:*.o(.data*);
+        BUILD_DIR/libgcc.a:*.o(.data*);
 
         /* rodata */
         BUILD_DIR/src/game*.o(.rodata*);
         BUILD_DIR/src/audio*.o(.rodata*);
         BUILD_DIR/libultra.a:*.o(.rodata*);
+        BUILD_DIR/libgcc.a:*.o(.rodata*);
         BUILD_DIR/lib/rsp.o(.rodata*);
     }
     END_SEG(main)

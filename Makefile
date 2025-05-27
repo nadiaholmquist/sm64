@@ -20,11 +20,9 @@ TARGET_N64 ?= 1
 
 
 # COMPILER - selects the C compiler to use
-#   ido - uses the SGI IRIS Development Option compiler, which is used to build
-#         an original matching N64 ROM
 #   gcc - uses the GNU C Compiler
 COMPILER ?= gcc
-$(eval $(call validate-option,COMPILER,ido gcc))
+$(eval $(call validate-option,COMPILER,gcc))
 
 
 # VERSION - selects the version of the game to build
@@ -38,31 +36,26 @@ $(eval $(call validate-option,VERSION,jp us eu sh cn))
 
 ifeq      ($(VERSION),jp)
   DEFINES   += VERSION_JP=1
-  OPT_FLAGS := -g
   GRUCODE   ?= f3d_old
   VERSION_JP_US  ?= true
   VERSION_SH_CN  ?= false
 else ifeq ($(VERSION),us)
   DEFINES   += VERSION_US=1
-  OPT_FLAGS := -g
   GRUCODE   ?= f3dex2
   VERSION_JP_US  ?= true
   VERSION_SH_CN  ?= false
 else ifeq ($(VERSION),eu)
   DEFINES   += VERSION_EU=1
-  OPT_FLAGS := -O2
   GRUCODE   ?= f3d_new
   VERSION_JP_US  ?= false
   VERSION_SH_CN  ?= false
 else ifeq ($(VERSION),sh)
   DEFINES   += VERSION_SH=1
-  OPT_FLAGS := -O2
   GRUCODE   ?= f3d_new
   VERSION_JP_US  ?= false
   VERSION_SH_CN  ?= true
 else ifeq ($(VERSION),cn)
   DEFINES   += VERSION_CN=1
-  OPT_FLAGS := -O2
   GRUCODE   ?= f3d_new
   VERSION_JP_US ?= false
   VERSION_SH_CN  ?= true
@@ -92,57 +85,11 @@ else ifeq ($(GRUCODE),f3dzex) # Fast3DZEX (2.0J / Animal Forest - Dōbutsu no Mo
   DEFINES += F3DZEX_GBI_2=1 F3DEX_GBI_2=1 F3DEX_GBI_SHARED=1
 endif
 
+NON_MATCHING := 1
+MIPSISET     := -mips3
+OPT_FLAGS    := -O2
 
-# USE_QEMU_IRIX - when ido is selected, select which way to emulate IRIX programs
-#   1 - use qemu-irix
-#   0 - statically recompile the IRIX programs
-USE_QEMU_IRIX ?= 0
-$(eval $(call validate-option,USE_QEMU_IRIX,0 1))
-
-ifeq      ($(COMPILER),ido)
-  ifeq ($(USE_QEMU_IRIX),1)
-    # Verify that qemu-irix exists
-    QEMU_IRIX ?= $(call find-command,qemu-irix)
-    ifeq (, $(QEMU_IRIX))
-      $(error Using the IDO compiler requires qemu-irix. Please install qemu-irix package or set the QEMU_IRIX environment variable to the full qemu-irix binary path)
-    endif
-  endif
-
-  MIPSISET := -mips2
-else ifeq ($(COMPILER),gcc)
-  NON_MATCHING := 1
-  MIPSISET     := -mips3
-  OPT_FLAGS    := -O2
-endif
-
-
-# NON_MATCHING - whether to build a matching, identical copy of the ROM
-#   1 - enable some alternate, more portable code that does not produce a matching ROM
-#   0 - build a matching ROM
-NON_MATCHING ?= 0
-$(eval $(call validate-option,NON_MATCHING,0 1))
-
-ifeq ($(TARGET_N64),0)
-  NON_MATCHING := 1
-endif
-
-ifeq ($(NON_MATCHING),1)
-  DEFINES += NON_MATCHING=1 AVOID_UB=1
-  COMPARE := 0
-endif
-
-
-# COMPARE - whether to verify the SHA-1 hash of the ROM after building
-#   1 - verifies the SHA-1 hash of the selected version of the game
-#   0 - does not verify the hash
-COMPARE ?= 1
-$(eval $(call validate-option,COMPARE,0 1))
-
-TARGET_STRING := sm64.$(VERSION).$(GRUCODE)
-# If non-default settings were chosen, disable COMPARE
-ifeq ($(filter $(TARGET_STRING), sm64.jp.f3d_old sm64.us.f3d_old sm64.eu.f3d_new sm64.sh.f3d_new sm64.cn.f3d_new),)
-  COMPARE := 0
-endif
+DEFINES += NON_MATCHING=1 AVOID_UB=1
 
 # Whether to hide commands or not
 VERBOSE ?= 0
@@ -159,16 +106,6 @@ ifeq ($(filter clean distclean,$(MAKECMDGOALS)),)
   $(info Version:        $(VERSION))
   $(info Microcode:      $(GRUCODE))
   $(info Target:         $(TARGET))
-  ifeq ($(COMPARE),1)
-    $(info Compare ROM:    yes)
-  else
-    $(info Compare ROM:    no)
-  endif
-  ifeq ($(NON_MATCHING),1)
-    $(info Build Matching: no)
-  else
-    $(info Build Matching: yes)
-  endif
   $(info =======================)
 endif
 
@@ -199,12 +136,12 @@ ifeq ($(filter clean distclean print-%,$(MAKECMDGOALS)),)
 
   # Make tools if out of date
   $(info Building general tools...)
-  DUMMY != $(MAKE) -s -C $(TOOLS_DIR) $(if $(filter-out ido0,$(COMPILER)$(USE_QEMU_IRIX)),all-except-recomp,) >&2 || echo FAIL
+  DUMMY != $(MAKE) -s -C $(TOOLS_DIR) >&2 || echo FAIL
     ifeq ($(DUMMY),FAIL)
       $(error Failed to build tools)
     endif
   $(info Building sm64tools...)
-  DUMMY != $(MAKE) -s -C $(TOOLS_DIR)/sm64tools $(if $(filter-out ido0,$(COMPILER)$(USE_QEMU_IRIX)),) >&2 || echo FAIL
+  DUMMY != $(MAKE) -s -C $(TOOLS_DIR)/sm64tools >&2 || echo FAIL
     ifeq ($(DUMMY),FAIL)
       $(error Failed to build tools)
     endif
@@ -291,20 +228,10 @@ LIBGCC_O_FILES := $(foreach file,$(LIBGCC_C_FILES),$(BUILD_DIR)/$(file:.c=.o))
 # Automatic dependency files
 DEP_FILES := $(O_FILES:.o=.d) $(ULTRA_O_FILES:.o=.d) $(GODDARD_O_FILES:.o=.d) $(LIBGCC_O_FILES:.o=.d) $(BUILD_DIR)/$(LD_SCRIPT).d
 
-# Files with GLOBAL_ASM blocks
-ifeq ($(NON_MATCHING),0)
-  GLOBAL_ASM_C_FILES != grep -rl 'GLOBAL_ASM(' $(wildcard src/**/*.c)
-GLOBAL_ASM_O_FILES = $(foreach file,$(GLOBAL_ASM_C_FILES),$(BUILD_DIR)/$(file:.c=.o))
-GLOBAL_ASM_DEP = $(BUILD_DIR)/src/audio/non_matching_dep
-endif
-
 
 #==============================================================================#
 # Compiler Options                                                             #
 #==============================================================================#
-
-IQUE_EGCS_PATH := $(TOOLS_DIR)/ique_egcs
-IQUE_LD_PATH := $(TOOLS_DIR)/ique_ld
 
 # detect prefix for MIPS toolchain
 ifneq      ($(call find-command,mips-linux-gnu-ld),)
@@ -318,26 +245,8 @@ else
 endif
 
 AS            := $(CROSS)as
-ifeq ($(COMPILER),gcc)
-  CC          := $(CROSS)gcc
-else
-  ifeq ($(USE_QEMU_IRIX),1)
-    IRIX_ROOT := $(TOOLS_DIR)/ido5.3_compiler
-    CC        := $(QEMU_IRIX) -silent -L $(IRIX_ROOT) $(IRIX_ROOT)/usr/bin/cc
-    ACPP      := $(QEMU_IRIX) -silent -L $(IRIX_ROOT) $(IRIX_ROOT)/usr/lib/acpp
-    COPT      := $(QEMU_IRIX) -silent -L $(IRIX_ROOT) $(IRIX_ROOT)/usr/lib/copt
-  else
-    IDO_ROOT  := $(TOOLS_DIR)/ido-static-recomp/build/out
-    CC        := $(IDO_ROOT)/cc
-    ACPP      := $(IDO_ROOT)/acpp
-    COPT      := $(IDO_ROOT)/copt
-  endif
-endif
-ifeq ($(VERSION),cn)
-  LD          := LD_LIBRARY_PATH=$(IQUE_LD_PATH) $(IQUE_LD_PATH)/mips64-elf-ld
-else
-  LD          := $(CROSS)ld
-endif
+CC            := $(CROSS)gcc
+LD            := $(CROSS)ld
 AR            := $(CROSS)ar
 OBJDUMP       := $(CROSS)objdump
 OBJCOPY       := $(CROSS)objcopy
@@ -355,20 +264,18 @@ endif
 C_DEFINES := $(foreach d,$(DEFINES),-D$(d))
 DEF_INC_CFLAGS := $(foreach i,$(INCLUDE_DIRS),-I$(i)) $(C_DEFINES)
 
-IQUE_AS := $(IQUE_EGCS_PATH)/as
-IQUE_ASFLAGS = -mcpu=r4300 -mabi=32 $(MIPSISET) $(foreach i,$(INCLUDE_DIRS),-I$(i)) $(foreach d,$(DEFINES),--defsym $(d))
+IQUE_ASFLAGS = -march=vr4300 -mabi=32 $(MIPSISET) $(foreach i,$(INCLUDE_DIRS),-I$(i)) $(foreach d,$(DEFINES),--defsym $(d))
 
 ifeq ($(VERSION),cn)
   IQUE_REASSEMBLED_ASM_FILES := $(wildcard asm/*.s) $(wildcard lib/asm/*.s)
   IQUE_REASSEMBLED_ASM_FILES := $(filter-out asm/ipl3_font.s,$(IQUE_REASSEMBLED_ASM_FILES))
   IQUE_REASSEMBLED := $(foreach file,$(IQUE_REASSEMBLED_ASM_FILES),$(BUILD_DIR)/$(file:.s=.o))
-  $(IQUE_REASSEMBLED): AS := $(IQUE_AS)
+  #$(IQUE_REASSEMBLED): AS := $(IQUE_AS)
   $(IQUE_REASSEMBLED): MIPSISET :=
   $(IQUE_REASSEMBLED): ASFLAGS = $(IQUE_ASFLAGS)
 endif
 
-IQUE_CC := COMPILER_PATH=$(IQUE_EGCS_PATH) $(IQUE_EGCS_PATH)/gcc
-IQUE_CFLAGS = -G 0 $(TARGET_CFLAGS) $(OPT_FLAGS) -D__sgi -DBBPLAYER -mcpu=r4300 -mgp32 -fno-pic -Wa,--strip-local-absolute $(MIPSISET) $(DEF_INC_CFLAGS)
+IQUE_CFLAGS = -DBBPLAYER -mgp32 -Wa,--strip-local-absolute -fcommon
 
 # iQue recompiled some files with a different compiler
 ifeq ($(VERSION),cn)
@@ -378,9 +285,9 @@ ifeq ($(VERSION),cn)
   IQUE_RECOMPILED_LIB_SRC := $(filter-out $(addprefix $(BUILD_DIR)/lib/src/,osDriveRomInit.o),$(IQUE_RECOMPILED_LIB_SRC))
   IQUE_RECOMPILED_LIBGCC_SRC  := $(LIBGCC_O_FILES)
   IQUE_RECOMPILED = $(IQUE_RECOMPILED_SRC_GAME) $(IQUE_RECOMPILED_LIB_SRC) $(IQUE_RECOMPILED_LIBGCC_SRC)
-  $(IQUE_RECOMPILED): CC := $(IQUE_CC)
+  #$(IQUE_RECOMPILED): CC := $(IQUE_CC)
   $(IQUE_RECOMPILED): MIPSISET :=
-  $(IQUE_RECOMPILED): CFLAGS = $(IQUE_CFLAGS)
+  $(IQUE_RECOMPILED): CFLAGS += $(IQUE_CFLAGS)
 endif
 
 # Prefer clang as C preprocessor if installed on the system
@@ -392,31 +299,12 @@ else
   CPPFLAGS := -P -Wno-trigraphs -D_LANGUAGE_ASSEMBLY $(DEF_INC_CFLAGS)
 endif
 
-# Check code syntax with host compiler
-CC_CHECK := gcc
-CC_CHECK_CFLAGS := -fsyntax-only -fsigned-char $(CC_CFLAGS) $(TARGET_CFLAGS) -std=gnu90 -Wall -Wextra -Wno-format-security -Wno-main -DNON_MATCHING -DAVOID_UB $(DEF_INC_CFLAGS)
-
 # C compiler options
 CFLAGS = -G 0 $(OPT_FLAGS) $(TARGET_CFLAGS) $(MIPSISET) $(DEF_INC_CFLAGS)
-ifeq ($(COMPILER),gcc)
-  CFLAGS += -mno-shared -march=vr4300 -mfix4300 -mabi=32 -mhard-float -mdivide-breaks -fno-stack-protector -fno-common -fno-zero-initialized-in-bss -fno-PIC -mno-abicalls -fno-strict-aliasing -fno-inline-functions -ffreestanding -fwrapv -Wall -Wextra -ffunction-sections -fdata-sections
-else
-  CFLAGS += -non_shared -Wab,-r4300_mul -Xcpluscomm -Xfullwarn -signed -32
-endif
+CFLAGS += -mno-shared -march=vr4300 -mfix4300 -mabi=32 -mhard-float -mdivide-breaks -fno-stack-protector -fno-common -fno-zero-initialized-in-bss -fno-PIC -mno-abicalls -fno-strict-aliasing -fno-inline-functions -ffreestanding -fwrapv -Wall -Wextra -ffunction-sections -fdata-sections
 
 ASFLAGS   := -march=vr4300 -mabi=32 $(foreach i,$(INCLUDE_DIRS),-I$(i)) $(foreach d,$(DEFINES),--defsym $(d))
 RSPASMFLAGS := $(foreach d,$(DEFINES),-definelabel $(subst =, ,$(d)))
-
-ifeq ($(shell getconf LONG_BIT), 32)
-  # Work around memory allocation bug in QEMU
-  export QEMU_GUEST_BASE := 1
-else
-  # Ensure that gcc treats the code as 32-bit
-  CC_CHECK_CFLAGS += -m32
-endif
-
-# Prevent a crash with -sopt
-export LANG := C
 
 #==============================================================================#
 # Miscellaneous Tools                                                          #
@@ -457,12 +345,7 @@ BLINK   := \033[33;5m
 endif
 
 # Use objcopy instead of extract_data_for_mio to get 16-byte aligned padding
-ifeq ($(COMPILER),gcc)
-  EXTRACT_DATA_FOR_MIO := $(OBJCOPY) -O binary --only-section=.data
-endif
-ifeq ($(VERSION),cn)
-  EXTRACT_DATA_FOR_MIO := $(OBJCOPY) -O binary --only-section=.data
-endif
+EXTRACT_DATA_FOR_MIO := $(OBJCOPY) -O binary --only-section=.data
 
 # Common build print status function
 define print
@@ -474,10 +357,6 @@ endef
 #==============================================================================#
 
 all: $(ROM)
-ifeq ($(COMPARE),1)
-	@$(PRINT) "$(GREEN)Checking if ROM matches.. $(NO_COL)\n"
-	@$(SHA1SUM) --quiet -c $(TARGET).sha1 && $(PRINT) "$(TARGET): $(GREEN)OK$(NO_COL)\n" || ($(PRINT) "$(YELLOW)Building the ROM file has succeeded, but does not match the original ROM.\nThis is expected, and not an error, if you are making modifications.\nTo silence this message, use 'make COMPARE=0.' $(NO_COL)\n" && false)
-endif
 
 clean:
 	$(RM) -r $(BUILD_DIR_BASE)
@@ -508,9 +387,7 @@ endif
 
 $(CRASH_TEXTURE_C_FILES): TEXTURE_ENCODING := u32
 
-ifeq ($(COMPILER),gcc)
-  $(BUILD_DIR)/lib/src/math/%.o: CFLAGS += -fno-builtin
-endif
+$(BUILD_DIR)/lib/src/math/%.o: CFLAGS += -fno-builtin
 
 ifeq ($(VERSION),eu)
   TEXT_DIRS := text/de text/us text/fr
@@ -704,17 +581,6 @@ $(BUILD_DIR)/include/level_headers.h: levels/level_headers.h.in
 	$(call print,Preprocessing level headers:,$<,$@)
 	$(V)$(CPP) $(CPPFLAGS) -I . $< | sed -E 's|(.+)|#include "\1"|' > $@
 
-# Run asm_processor on files that have NON_MATCHING code
-ifeq ($(NON_MATCHING),0)
-$(GLOBAL_ASM_O_FILES): CC := $(V)$(PYTHON) $(TOOLS_DIR)/asm_processor/build.py $(CC) -- $(AS) $(ASFLAGS) --
-endif
-
-# Rebuild files with 'GLOBAL_ASM' if the NON_MATCHING flag changes.
-$(GLOBAL_ASM_O_FILES): $(GLOBAL_ASM_DEP).$(NON_MATCHING)
-$(GLOBAL_ASM_DEP).$(NON_MATCHING):
-	@$(RM) $(GLOBAL_ASM_DEP).*
-	$(V)touch $@
-
 
 #==============================================================================#
 # Compilation Recipes                                                          #
@@ -723,157 +589,15 @@ $(GLOBAL_ASM_DEP).$(NON_MATCHING):
 # Compile C code
 $(BUILD_DIR)/%.o: %.c
 	$(call print,Compiling:,$<,$@)
-	$(V)$(CC_CHECK) $(CC_CHECK_CFLAGS) -MMD -MP -MT $@ -MF $(BUILD_DIR)/$*.d $<
-	$(V)$(CC) -c $(CFLAGS) -o $@ $<
+	$(V)$(CC) -c $(CFLAGS) -o $@ -MMD -MP -MF $(BUILD_DIR)/%d $<
 ifeq ($(VERSION),cn)
 	$(V)$(TOOLS_DIR)/patch_elf_32bit $@
 endif
 $(BUILD_DIR)/%.o: $(BUILD_DIR)/%.c
 	$(call print,Compiling:,$<,$@)
-	$(V)$(CC_CHECK) $(CC_CHECK_CFLAGS) -MMD -MP -MT $@ -MF $(BUILD_DIR)/$*.d $<
-	$(V)$(CC) -c $(CFLAGS) -o $@ $<
+	$(V)$(CC) -c $(CFLAGS) -o $@ -MMD -MP -MF $(BUILD_DIR)/%d $<
 ifeq ($(VERSION),cn)
 	$(V)$(TOOLS_DIR)/patch_elf_32bit $@
-endif
-
-# Alternate compiler flags needed for matching
-ifeq ($(COMPILER),ido)
-  $(BUILD_DIR)/levels/%/leveldata.o: OPT_FLAGS := -g
-  $(BUILD_DIR)/actors/%.o:           OPT_FLAGS := -g
-  $(BUILD_DIR)/bin/%.o:              OPT_FLAGS := -g
-  $(BUILD_DIR)/src/goddard/%.o:      OPT_FLAGS := -g
-  $(BUILD_DIR)/src/goddard/%.o:      MIPSISET := -mips1
-  $(BUILD_DIR)/lib/asm/__osDisableInt.o: MIPSISET := -mips2
-  $(BUILD_DIR)/lib/asm/bcopy.o:      MIPSISET := -mips2
-  $(BUILD_DIR)/lib/src/%.o:          OPT_FLAGS :=
-  $(BUILD_DIR)/lib/src/math/%.o:     OPT_FLAGS := -O2
-  $(BUILD_DIR)/lib/src/math/ll%.o:   OPT_FLAGS :=
-  $(BUILD_DIR)/lib/src/math/ll%.o:   MIPSISET := -mips3 -32
-  $(BUILD_DIR)/lib/src/ldiv.o:       OPT_FLAGS := -O2
-  $(BUILD_DIR)/lib/src/string.o:     OPT_FLAGS := -O2
-  $(BUILD_DIR)/lib/src/gu%.o:        OPT_FLAGS := -O3
-  $(BUILD_DIR)/lib/src/al%.o:        OPT_FLAGS := -O3
-  ifeq ($(VERSION_SH_CN),true)
-    $(BUILD_DIR)/lib/src/_Ldtob.o:   OPT_FLAGS := -O3
-    $(BUILD_DIR)/lib/src/_Litob.o:   OPT_FLAGS := -O3
-    $(BUILD_DIR)/lib/src/_Printf.o:  OPT_FLAGS := -O3
-    $(BUILD_DIR)/lib/src/sprintf.o:  OPT_FLAGS := -O3
-    $(BUILD_DIR)/lib/src/osDriveRomInit.o: OPT_FLAGS := -g
-  endif
-  ifeq ($(VERSION),cn)
-    $(BUILD_DIR)/lib/src/osAiSetFrequency.o:    MIPSISET := -mips2
-    $(BUILD_DIR)/lib/src/osVirtualToPhysical.o: OPT_FLAGS := -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osInitializeIQueWrapper.o: OPT_FLAGS := -O2
-    $(BUILD_DIR)/lib/src/osAiGetLength.o:       OPT_FLAGS := -O2
-    $(BUILD_DIR)/lib/src/osAiSetFrequency.o:    OPT_FLAGS := -O2
-    $(BUILD_DIR)/lib/src/math/cosf.o:           OPT_FLAGS := -O2 -mips2
-    $(BUILD_DIR)/lib/src/guOrthoF.o:            OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/guPerspectiveF.o:      OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osAiSetNextBuffer.o:   OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osContStartReadData.o: OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osContInit.o:          OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/math/sinf.o:           OPT_FLAGS := -O2 -mips2
-    $(BUILD_DIR)/lib/src/math/ll%.o:            OPT_FLAGS := -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/string.o:              OPT_FLAGS := -O2 -mips2
-    $(BUILD_DIR)/lib/src/sprintf.o:             OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osSyncPrintf.o:        OPT_FLAGS := -O2
-    $(BUILD_DIR)/lib/src/_Printf.o:             OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osCreateMesgQueue.o:   OPT_FLAGS := -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osRecvMesg.o:          OPT_FLAGS := -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osSendMesg.o:          OPT_FLAGS := -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osSetEventMesg.o:      OPT_FLAGS := -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osSpTaskLoadGo.o:      OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osSpTaskYield.o:       OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osSpTaskYielded.o:     OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/__osSiRawStartDma.o:   OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/__osSiCreateAccessQueue.o: OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osCreateThread.o:      OPT_FLAGS := -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osSetThreadPri.o:      OPT_FLAGS := -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osStartThread.o:       OPT_FLAGS := -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/__osDequeueThread.o:   OPT_FLAGS := -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/__osGetCurrFaultedThread.o: OPT_FLAGS := -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osGetTime.o:           OPT_FLAGS := -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osSetTime.o:           OPT_FLAGS := -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osSetTimer.o:          OPT_FLAGS := -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osTimer.o:             OPT_FLAGS := -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osCreateViManager.o:   OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osViSetEvent.o:        OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osViSetMode.o:         OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osViSetSpecialFeatures.o: OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osViSwapBuffer.o:      OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/__osViSwapContext.o:   OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osViBlack.o:           OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/guRotateF.o:           OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osEepromProbe.o:       OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osEepromLongWrite.o:   OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osEepromLongRead.o:    OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osCreatePiManager.o:   OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osEPiRawStartDma.o:    OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/epidma.o:              OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osCartRomInit.o:       OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/__osDevMgrMain.o:      OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/__osPiCreateAccessQueue.o: OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osPiStartDma.o:        OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/motor.o:               OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osInitialize.o:        OPT_FLAGS := -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/__osAiDeviceBusy.o:    OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/_Litob.o:              OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/_Ldtob.o:              OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osJamMesg.o:           OPT_FLAGS := -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/__osSpDeviceBusy.o:    OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/__osSpGetStatus.o:     OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/__osSpSetStatus.o:     OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/__osSpSetPc.o:         OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/__osSpRawStartDma.o:   OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/__osSiRawReadIo.o:     OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/__osSiRawWriteIo.o:    OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osDestroyThread.o:     OPT_FLAGS := -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osGetThreadPri.o:      OPT_FLAGS := -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osYieldThread.o:       OPT_FLAGS := -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/__osViInit.o:          OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/__osViGetCurrentContext.o: OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osEepromRead.o:        OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osEepromWrite.o:       OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/__osSetGlobalIntMask.o: OPT_FLAGS := -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/__osResetGlobalIntMask.o: OPT_FLAGS := -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osPiRawStartDma.o:     OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osPiGetCmdQueue.o:     OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osEPiRawReadIo.o:    OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/osEPiRawWriteIo.o:   OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/ldiv.o:                OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/__osSiDeviceBusy.o:    OPT_FLAGS := -O2 -mno-abicalls -mips2
-    $(BUILD_DIR)/lib/src/libgcc/%.o:            OPT_FLAGS := -O2 -g -mips2
-  endif
-  ifeq ($(VERSION),eu)
-    $(BUILD_DIR)/lib/src/_Ldtob.o:   OPT_FLAGS := -O3
-    $(BUILD_DIR)/lib/src/_Litob.o:   OPT_FLAGS := -O3
-    $(BUILD_DIR)/lib/src/_Printf.o:  OPT_FLAGS := -O3
-    $(BUILD_DIR)/lib/src/sprintf.o:  OPT_FLAGS := -O3
-
-    # For all audio files other than external.c and port_eu.c, put string literals
-    # in .data. (In Shindou, the port_eu.c string literals also moved to .data.)
-    $(BUILD_DIR)/src/audio/%.o:        OPT_FLAGS := -O2 -use_readwrite_const
-    $(BUILD_DIR)/src/audio/port_eu.o:  OPT_FLAGS := -O2
-  endif
-  ifeq ($(VERSION_JP_US),true)
-    $(BUILD_DIR)/src/audio/%.o:        OPT_FLAGS := -O2 -Wo,-loopunroll,0
-    $(BUILD_DIR)/src/audio/load.o:     OPT_FLAGS := -O2 -Wo,-loopunroll,0 -framepointer
-    # The source-to-source optimizer copt is enabled for audio. This makes it use
-    # acpp, which needs -Wp,-+ to handle C++-style comments.
-    # All other files than external.c should really use copt, but only a few have
-    # been matched so far.
-    $(BUILD_DIR)/src/audio/effects.o:   OPT_FLAGS := -O2 -Wo,-loopunroll,0 -sopt,-inline=sequence_channel_process_sound,-scalaroptimize=1 -Wp,-+
-    $(BUILD_DIR)/src/audio/synthesis.o: OPT_FLAGS := -O2 -Wo,-loopunroll,0 -sopt,-scalaroptimize=1 -Wp,-+
-  endif
-  $(BUILD_DIR)/src/audio/external.o: OPT_FLAGS := -O2 -Wo,-loopunroll,0
-
-# Add a target for build/eu/src/audio/*.copt to make it easier to see debug
-$(BUILD_DIR)/src/audio/%.acpp: src/audio/%.c
-	$(ACPP) $(TARGET_CFLAGS) $(DEF_INC_CFLAGS) -D__sgi -+ $< > $@
-$(BUILD_DIR)/src/audio/%.copt: $(BUILD_DIR)/src/audio/%.acpp
-	$(COPT) -signed -I=$< -CMP=$@ -cp=i -scalaroptimize=1 $(COPTFLAGS)
-$(BUILD_DIR)/src/audio/seqplayer.copt: COPTFLAGS := -inline_manual
-
 endif
 
 # Assemble assembly code
