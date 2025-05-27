@@ -85,11 +85,18 @@ else ifeq ($(GRUCODE),f3dzex) # Fast3DZEX (2.0J / Animal Forest - Dōbutsu no Mo
   DEFINES += F3DZEX_GBI_2=1 F3DEX_GBI_2=1 F3DEX_GBI_SHARED=1
 endif
 
-NON_MATCHING := 1
-MIPSISET     := -mips3
-OPT_FLAGS    := -O2
+# ENABLE_MIO0 - enable mio0 compression of segments
+ENABLE_MIO0 ?= $(TARGET_N64)
+$(eval $(call validate-option,ENABLE_MIO0,1 0))
+
+ifeq ($(ENABLE_MIO0),1)
+  DEFINES += ENABLE_MIO0=1
+endif
 
 DEFINES += NON_MATCHING=1 AVOID_UB=1
+
+MIPSISET     := -mips3
+OPT_FLAGS    := -O2
 
 # Whether to hide commands or not
 VERBOSE ?= 0
@@ -311,8 +318,11 @@ RSPASMFLAGS := $(foreach d,$(DEFINES),-definelabel $(subst =, ,$(d)))
 #==============================================================================#
 
 # N64 tools
-#MIO0TOOL              := $(TOOLS_DIR)/sm64tools/mio0
-MIO0TOOL              := cp
+ifeq ($(ENABLE_MIO0),1)
+  MIO0TOOL            := $(TOOLS_DIR)/sm64tools/mio0
+else
+  MIO0TOOL            := cp
+endif
 N64CKSUM              := $(TOOLS_DIR)/sm64tools/n64cksum
 N64GRAPHICS           := $(TOOLS_DIR)/sm64tools/n64graphics
 N64GRAPHICS_CI        := $(TOOLS_DIR)/sm64tools/n64graphics_ci
