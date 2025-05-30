@@ -70,7 +70,7 @@ else ifeq ($(VERSION),cn)
 endif
 
 ifeq ($(TARGET_NDS),1)
-  OPT_FLAGS           := -O2 -flto=auto -ffast-math
+  OPT_FLAGS           := -O2 -ffast-math
   GRUCODE             := f3dex2
   COMPILER            := gcc
   WONDERFUL_TOOLCHAIN ?= /opt/wonderful
@@ -249,7 +249,7 @@ ROM            := $(BUILD_DIR)/$(TARGET).z64
 endif
 ELF            := $(BUILD_DIR)/$(TARGET).elf
 LIBULTRA       := $(BUILD_DIR)/libultra.a
-LD_SCRIPT      := sm64.ld
+LD_SCRIPT      := ds_arm9.ld
 CHARMAP        := charmap.txt
 CHARMAP_DEBUG  := charmap.debug.txt
 MIO0_DIR       := $(BUILD_DIR)/bin
@@ -259,7 +259,9 @@ ACTOR_DIR      := actors
 LEVEL_DIRS     := $(patsubst levels/%,%,$(dir $(wildcard levels/*/header.h)))
 
 # Directories containing source files
-SRC_DIRS := src src/engine src/game src/audio src/menu src/buffers actors levels bin data assets lib sound
+CODE_SRC_DIRS := src src/engine src/game src/audio src/menu src/buffers lib src/nds
+ASSET_SRC_DIRS := actors levels bin data assets sound
+SRC_DIRS := $(CODE_SRC_DIRS) $(ASSET_SRC_DIRS)
 BIN_DIRS := bin bin/$(VERSION)
 
 ifeq ($(VERSION),cn)
@@ -270,7 +272,7 @@ ULTRA_SRC_DIRS := lib/src lib/src/math lib/data
 ULTRA_BIN_DIRS := lib/bin
 
 ifeq ($(TARGET_NDS),1)
-  SRC_DIRS += src/nds
+  #CODE_SRC_DIRS += src/nds
   ARM7_SRC_DIRS := src/nds/arm7
   GFX_DIRS := src/nds/gfx
 else
@@ -285,7 +287,9 @@ include Makefile.split
 
 # Source code files
 LEVEL_C_FILES     := $(wildcard levels/*/leveldata.c) $(wildcard levels/*/script.c) $(wildcard levels/*/geo.c)
-C_FILES           := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.c)) $(LEVEL_C_FILES)
+CODE_C_FILES      := $(foreach dir,$(CODE_SRC_DIRS),$(wildcard $(dir)/*.c))
+ASSET_C_FILES     := $(foreach dir,$(ASSET_SRC_DIRS),$(wildcard $(dir)/*.c)) $(LEVEL_C_FILES)
+C_FILES           := $(CODE_C_FILES) $(ASSET_C_FILES)
 S_FILES           := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.s))
 ULTRA_C_FILES     := $(foreach dir,$(ULTRA_SRC_DIRS),$(wildcard $(dir)/*.c))
 GODDARD_C_FILES   := $(foreach dir,$(GODDARD_SRC_DIRS),$(wildcard $(dir)/*.c))
@@ -339,8 +343,10 @@ SOUND_SEQUENCE_FILES := \
   )
 
 # Object files
-O_FILES := $(foreach file,$(C_FILES),$(BUILD_DIR)/$(file:.c=.o)) \
+CODE_O_FILES := $(foreach file,$(CODE_C_FILES),$(BUILD_DIR)/$(file:.c=.o)) 
+ASSET_O_FILES := $(foreach file,$(ASSET_C_FILES),$(BUILD_DIR)/$(file:.c=.o)) \
            $(foreach file,$(GENERATED_C_FILES),$(file:.c=.o))
+O_FILES := $(CODE_O_FILES) $(ASSET_O_FILES)
 
 ifneq ($(TARGET_NDS),1)
   O_FILES += $(foreach file,$(S_FILES),$(BUILD_DIR)/$(file:.s=.o))
@@ -477,7 +483,7 @@ endif
 ifeq ($(TARGET_NDS),1)
 
 LIBDIRS := $(BLOCKSDS)/libs/libnds
-TARGET_CFLAGS := -mcpu=arm946e-s+nofp -Wno-error=incompatible-pointer-types -Wno-error=implicit-function-declaration -Wno-error=int-conversion $(foreach dir,$(LIBDIRS),-I$(dir)/include) -DTARGET_NDS -DARM9 -D_LANGUAGE_C -DNO_SEGMENTED_MEMORY #-DENABLE_FPS
+TARGET_CFLAGS := -mcpu=arm946e-s+nofp -Wno-error=incompatible-pointer-types -Wno-error=implicit-function-declaration -Wno-error=int-conversion $(foreach dir,$(LIBDIRS),-I$(dir)/include) -DTARGET_NDS -DARM9 -D_LANGUAGE_C -ffunction-sections -fdata-sections #-DENABLE_FPS
 ARM7_TARGET_CFLAGS := -mcpu=arm7tdmi -Wno-error=implicit-function-declaration $(foreach dir,$(LIBDIRS),-I$(dir)/include) -DTARGET_NDS -DARM7 -D_LANGUAGE_C
 
 CC_CHECK := $(CC)
@@ -486,7 +492,7 @@ ARM7_CC_CHECK_CFLAGS := -fsyntax-only -fsigned-char $(CC_CFLAGS) $(ARM7_TARGET_C
 
 ASFLAGS := $(foreach i,$(INCLUDE_DIRS),-I$(i)) $(foreach d,$(DEFINES),--defsym $(d))
 CFLAGS := -fno-strict-aliasing -fwrapv $(OPT_FLAGS) $(TARGET_CFLAGS) $(DEF_INC_CFLAGS)
-LDFLAGS := -Wl,--start-group -lc -lnds9 -Wl,--end-group -specs=$(BLOCKSDS)/sys/crts/dsi_arm9.specs -g $(foreach dir,$(LIBDIRS),-L$(dir)/lib) $(TARGET_CFLAGS)
+LDFLAGS := -Wl,--start-group -lc -lnds9 -Wl,--end-group -specs=sm64.nds.specs -g $(foreach dir,$(LIBDIRS),-L$(dir)/lib) $(TARGET_CFLAGS)
 
 ARM7_CFLAGS := -fno-strict-aliasing -fwrapv $(OPT_FLAGS) $(ARM7_TARGET_CFLAGS) $(DEF_INC_CFLAGS)
 ARM7_LDFLAGS := -Wl,--start-group -lc -lnds7 -Wl,--end-group -specs=$(BLOCKSDS)/sys/crts/ds_arm7.specs -g $(foreach dir,$(LIBDIRS),-L$(dir)/lib) $(ARM7_TARGET_CFLAGS)
@@ -1025,6 +1031,12 @@ $(BUILD_DIR)/%.o: %.s
 	$(call print,Assembling:,$<,$@)
 	$(V)$(CPP) $(CPPFLAGS) $< | $(AS) $(ASFLAGS) -MD $(BUILD_DIR)/$*.d -o $@
 
+# Run linker script through the C preprocessor
+$(BUILD_DIR)/$(LD_SCRIPT): $(LD_SCRIPT)
+	$(call print,Preprocessing linker script:,$<,$@)
+	$(V)$(CPP) $(CPPFLAGS) -DBUILD_DIR=$(BUILD_DIR) -MMD -MP -MT $@ -MF $@.d -o $@ $<
+
+
 # Build NDS ROM
 ifeq ($(TARGET_NDS),1)
 
@@ -1032,20 +1044,23 @@ $(ARM7): $(ARM7_O_FILES)
 	@$(PRINT) "$(GREEN)Linking ARM7 binary:  $(BLUE)$@ $(NO_COL)\n"
 	$(V)$(CC) -L $(BUILD_DIR) -o $@ $(ARM7_O_FILES) $(ARM7_LDFLAGS)
 
-$(ARM9): $(GFX_O_FILES) $(O_FILES) $(MIO0_FILES:.mio0=.o) $(ULTRA_O_FILES) $(GODDARD_O_FILES)
+#$(BUILD_DIR)/data.elf: $(O_FILES) $(MIO0_FILES:.mio0=.o) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(BUILD_DIR)/$(LD_SCRIPT)
+#	$(LD) -o $@ -r $(ASSET_O_FILES) -T $(BUILD_DIR)/$(LD_SCRIPT)
+#	$(OBJCOPY) --weaken $(BUILD_DIR)/data.elf
+
+$(ARM9): $(GFX_O_FILES) $(O_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(BUILD_DIR)/$(LD_SCRIPT) #$(BUILD_DIR)/data.elf
 	@$(PRINT) "$(GREEN)Linking ARM9 binary:  $(BLUE)$@ $(NO_COL)\n"
-	$(V)$(CC) -L $(BUILD_DIR) -o $@ $(GFX_O_FILES) $(O_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(LDFLAGS)
+	$(V)#$(CC) -L $(BUILD_DIR) -o $@ $(GFX_O_FILES) $(CODE_O_FILES) $(ULTRA_O_FILES) $(LDFLAGS) -Wl,-Map -Wl,$(BUILD_DIR)/sm64.$(VERSION).arm9.map -Wl,--just-symbols=$(BUILD_DIR)/data.elf
+	$(V)$(CC) -L $(BUILD_DIR) -o $@ $(GFX_O_FILES) $(O_FILES) $(ULTRA_O_FILES) $(LDFLAGS) -Wl,-Map -Wl,$(BUILD_DIR)/sm64.$(VERSION).arm9.map -Wl,--just-symbols=$(BUILD_DIR)/data.elf
+
+#$(BUILD_DIR)/final-assets.bin: $(ARM9) $(BUILD_DIR)/data.elf
+	#$(LD) -o $(BUILD_DIR)/final-assets.elf $(BUILD_DIR)/data.elf --just-symbols=$(ARM9)
+	#llvm-objcopy -O binary --only-section='.sm64*' $(BUILD_DIR)/final-assets.elf $@
 
 $(ROM): $(ARM7) $(ARM9)
 	@$(PRINT) "$(GREEN)Building ROM: $(BLUE)$@ $(NO_COL)\n"
 	$(V)$(NDSTOOL) -c $@ -9 $(ARM9) -7 $(ARM7)
 else
-
-# Run linker script through the C preprocessor
-$(BUILD_DIR)/$(LD_SCRIPT): $(LD_SCRIPT)
-	$(call print,Preprocessing linker script:,$<,$@)
-	$(V)$(CPP) $(CPPFLAGS) -DBUILD_DIR=$(BUILD_DIR) -MMD -MP -MT $@ -MF $@.d -o $@ $<
-
 # Link libultra
 $(BUILD_DIR)/libultra.a: $(ULTRA_O_FILES)
 	@$(PRINT) "$(GREEN)Linking libultra:  $(BLUE)$@ $(NO_COL)\n"

@@ -83,6 +83,7 @@ struct GraphNodeObject gMirrorMario;  // copy of Mario's geo node for drawing mi
  * Geo node script that draws Mario's head on the title screen.
  */
 Gfx *geo_draw_mario_head_goddard(s32 callContext, struct GraphNode *node, Mat4 *c) {
+#if 0
     Gfx *gfx = NULL;
     s16 sfx = 0;
     struct GraphNodeGenerated *asGenerated = (struct GraphNodeGenerated *) node;
@@ -98,6 +99,7 @@ Gfx *geo_draw_mario_head_goddard(s32 callContext, struct GraphNode *node, Mat4 *
         play_menu_sounds(sfx);
     }
     return gfx;
+#endif
 }
 
 static void toad_message_faded(void) {

@@ -1180,7 +1180,7 @@ void draw_frame(Gfx *display_list) {
     fog_status = 0;
 
     // Process and draw the frame
-    execute(display_list);
+    //execute(display_list);
     glFlush(GL_TRANS_MANUALSORT);
 
     // Configure fog based on the frame parameters

@@ -9,7 +9,11 @@
 // -g codegen implies that they are separate variables. This is impossible to
 // reconcile without undefined behavior. Avoid that when possible.
 #ifdef AVOID_UB
+#ifdef TARGET_NDS
+extern u16 gFramebuffers[3][0];
+#else
 extern u16 gFramebuffers[3][SCREEN_WIDTH * SCREEN_HEIGHT];
+#endif
 #define gFramebuffer0 gFramebuffers[0]
 #define gFramebuffer1 gFramebuffers[1]
 #define gFramebuffer2 gFramebuffers[2]

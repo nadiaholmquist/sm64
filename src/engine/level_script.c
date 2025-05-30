@@ -3,6 +3,8 @@
 #include <string.h>
 #endif
 
+#include <stdio.h>
+
 #include "sm64.h"
 #include "audio/external.h"
 #include "buffers/framebuffers.h"
@@ -281,6 +283,7 @@ static void level_cmd_load_mio0(void) {
 }
 
 static void level_cmd_load_mario_head(void) {
+#if 0
     // TODO: Fix these hardcoded sizes
     void *addr = main_pool_alloc(DOUBLE_SIZE_ON_64_BIT(0xE1000), MEMORY_POOL_LEFT);
     if (addr != NULL) {
@@ -294,6 +297,7 @@ static void level_cmd_load_mario_head(void) {
     }
 
     sCurrentCmd = CMD_NEXT;
+#endif
 }
 
 static void level_cmd_load_mio0_texture(void) {

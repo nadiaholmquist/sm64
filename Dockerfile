@@ -1,6 +1,7 @@
 FROM skylyrac/blocksds:slim-latest as build
 
 RUN apt update
+RUN apt update
 RUN apt -y install \
 	build-essential \
 	bsdmainutils \

@@ -620,7 +620,11 @@ void setup_game_memory(void) {
     UNUSED u8 filler[8];
 
     // Setup general Segment 0
+#ifdef TARGET_NDS
+    set_segment_base_addr(0, (void *) 0x02000000);
+#else
     set_segment_base_addr(0, (void *) 0x80000000);
+#endif
     // Create Mesg Queues
     osCreateMesgQueue(&gGfxVblankQueue, gGfxMesgBuf, ARRAY_COUNT(gGfxMesgBuf));
     osCreateMesgQueue(&gGameVblankQueue, gGameMesgBuf, ARRAY_COUNT(gGameMesgBuf));

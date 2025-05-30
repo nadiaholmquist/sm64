@@ -59,7 +59,7 @@
 #define ALIGNED16
 #endif
 
-#ifndef NO_SEGMENTED_MEMORY
+#if !defined(NO_SEGMENTED_MEMORY) && !defined(TARGET_NDS)
 // convert a virtual address to physical.
 #define VIRTUAL_TO_PHYSICAL(addr)   ((uintptr_t)(addr) & 0x1FFFFFFF)
 

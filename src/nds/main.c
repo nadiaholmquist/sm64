@@ -14,6 +14,8 @@ u8 nds_audio_state;
 static u8 audio_step;
 static u8 fps;
 
+FILE* blob;
+
 void exec_display_list(struct SPTask *spTask) {
     draw_frame((Gfx*)spTask->task.t.data_ptr);
     fps++;
@@ -55,8 +57,21 @@ int main(void) {
     main_pool_init(pool, pool + sizeof(pool) / sizeof(pool[0]));
     gEffectsMemoryPool = mem_pool_init(0x4000, MEMORY_POOL_LEFT);
 
+    defaultExceptionHandler();
+
+    consoleDemoInit();
+
     // Initialize various components
     fatInitDefault();
+
+#ifdef USE_BLOB
+    blob = fopen("sd:/blob.bin", "r");
+    if (!blob) {
+        printf("no blob\n");
+        for(;;);
+    }
+#endif
+
     renderer_init();
     audio_init();
     sound_init();

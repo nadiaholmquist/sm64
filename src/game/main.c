@@ -86,6 +86,7 @@ void handle_debug_key_sequences(void) {
     }
 }
 
+#ifndef TARGET_NDS
 void unknown_main_func(void) {
     // uninitialized
     OSTime time;
@@ -113,6 +114,7 @@ void stub_main_2(void) {
 
 void stub_main_3(void) {
 }
+#endif
 
 void setup_mesg_queues(void) {
     osCreateMesgQueue(&gDmaMesgQueue, gDmaMesgBuf, ARRAY_COUNT(gDmaMesgBuf));
@@ -136,6 +138,7 @@ void alloc_pool(void) {
     gEffectsMemoryPool = mem_pool_init(0x4000, MEMORY_POOL_LEFT);
 }
 
+#ifndef TARGET_NDS
 void create_thread(OSThread *thread, OSId id, void (*entry)(void *), void *arg, void *sp, OSPri pri) {
     thread->next = NULL;
     thread->queue = NULL;
@@ -365,6 +368,8 @@ void thread3_main(UNUSED void *arg) {
     }
 }
 
+#endif
+
 void set_vblank_handler(s32 index, struct VblankHandler *handler, OSMesgQueue *queue, OSMesg *msg) {
     handler->queue = queue;
     handler->msg = msg;
@@ -378,6 +383,7 @@ void set_vblank_handler(s32 index, struct VblankHandler *handler, OSMesgQueue *q
             break;
     }
 }
+
 
 void send_sp_task_message(OSMesg *msg) {
     osWritebackDCacheAll();
@@ -417,6 +423,8 @@ void turn_off_audio(void) {
         ;
     }
 }
+
+#ifndef TARGET_NDS
 
 /**
  * Initialize hardware, start main thread, then idle.
@@ -462,3 +470,4 @@ void main_func(void) {
     create_thread(&gIdleThread, 1, thread1_idle, NULL, gIdleThreadStack + 0x800, 100);
     osStartThread(&gIdleThread);
 }
+#endif

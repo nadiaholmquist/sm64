@@ -3,6 +3,8 @@
 #include <string.h>
 #endif
 
+//#define USE_BLOB
+
 #include "sm64.h"
 
 #define INCLUDED_FROM_MEMORY_C
@@ -15,6 +17,11 @@
 #include "memory.h"
 #include "segments.h"
 #include "segment_symbols.h"
+
+#ifdef TARGET_NDS
+#include <stdio.h>
+extern FILE* blob;
+#endif
 
 // round up to the next multiple
 #define ALIGN4(val) (((val) + 0x3) & ~0x3)
@@ -69,24 +76,34 @@ FORCE_BSS struct MainPoolBlock *sPoolListHeadR;
 static struct MainPoolState *gMainPoolState = NULL;
 
 uintptr_t set_segment_base_addr(s32 segment, void *addr) {
-    sSegmentTable[segment] = (uintptr_t) addr & 0x1FFFFFFF;
+    sSegmentTable[segment] = (uintptr_t) addr & 0x00FFFFFF;
     return sSegmentTable[segment];
 }
 
 void *get_segment_base_addr(s32 segment) {
-    return (void *) (sSegmentTable[segment] | 0x80000000);
+    return (void *) (sSegmentTable[segment] | 0x02000000);
 }
 
 #ifndef NO_SEGMENTED_MEMORY
 void *segmented_to_virtual(const void *addr) {
     size_t segment = (uintptr_t) addr >> 24;
+#ifdef TARGET_NDS
     size_t offset = (uintptr_t) addr & 0x00FFFFFF;
 
+    return (void *) ((sSegmentTable[segment] + offset) | 0x02000000);
+#else
+    size_t offset = (uintptr_t) addr & 0x01FFFFFF;
+
     return (void *) ((sSegmentTable[segment] + offset) | 0x80000000);
+#endif
 }
 
 void *virtual_to_segmented(u32 segment, const void *addr) {
-    size_t offset = ((uintptr_t) addr & 0x1FFFFFFF) - sSegmentTable[segment];
+#ifdef TARGET_NDS
+    size_t offset = ((uintptr_t) addr & 0x00FFFFFF) - sSegmentTable[segment];
+#else
+    size_t offset = ((uintptr_t) addr & 0x01FFFFFF) - sSegmentTable[segment];
+#endif
 
     return (void *) ((segment << 24) + offset);
 }
@@ -252,7 +269,7 @@ u32 main_pool_pop_state(void) {
  * function blocks until completion.
  */
 static void dma_read(u8 *dest, u8 *srcStart, u8 *srcEnd) {
-#ifdef TARGET_N64
+#if defined(TARGET_N64)
     u32 size = ALIGN16(srcEnd - srcStart);
 
     osInvalDCache(dest, size);
@@ -267,6 +284,9 @@ static void dma_read(u8 *dest, u8 *srcStart, u8 *srcEnd) {
         srcStart += copySize;
         size -= copySize;
     }
+#elif defined(TARGET_NDS) && defined(USE_BLOB)
+    fseek(blob, srcStart, SEEK_SET);
+    fread(dest, srcEnd - srcStart, 1, blob);
 #else
     memcpy(dest, srcStart, srcEnd - srcStart);
 #endif
@@ -308,6 +328,7 @@ void *load_segment(s32 segment, u8 *srcStart, u8 *srcEnd, u32 side) {
  * of the pool is already allocated, return NULL.
  */
 void *load_to_fixed_pool_addr(u8 *destAddr, u8 *srcStart, u8 *srcEnd) {
+    return srcStart;
     void *dest = NULL;
     u32 srcSize = ALIGN16(srcEnd - srcStart);
     u32 destSize = ALIGN16((u8 *) sPoolListHeadR - destAddr);
@@ -318,8 +339,8 @@ void *load_to_fixed_pool_addr(u8 *destAddr, u8 *srcStart, u8 *srcEnd) {
             bzero(dest, destSize);
             osWritebackDCacheAll();
             dma_read(dest, srcStart, srcEnd);
-            osInvalICache(dest, destSize);
-            osInvalDCache(dest, destSize);
+            //osInvalICache(dest, destSize);
+            //osInvalDCache(dest, destSize);
         }
     } else {
     }
@@ -332,6 +353,7 @@ void *load_to_fixed_pool_addr(u8 *destAddr, u8 *srcStart, u8 *srcEnd) {
  * base address of segment to this address.
  */
 void *load_segment_decompress(s32 segment, u8 *srcStart, u8 *srcEnd) {
+#ifdef TARGET_N64
     void *dest = NULL;
 
     u32 compSize = ALIGN16(srcEnd - srcStart);
@@ -355,9 +377,13 @@ void *load_segment_decompress(s32 segment, u8 *srcStart, u8 *srcEnd) {
     } else {
     }
     return dest;
+#else
+    return load_segment(segment, srcStart, srcEnd, MEMORY_POOL_RIGHT);
+#endif
 }
 
 void *load_segment_decompress_heap(u32 segment, u8 *srcStart, u8 *srcEnd) {
+#ifdef TARGET_N64
     UNUSED void *dest = NULL;
     u32 compSize = ALIGN16(srcEnd - srcStart);
     u8 *compressed = main_pool_alloc(compSize, MEMORY_POOL_RIGHT);
@@ -371,9 +397,15 @@ void *load_segment_decompress_heap(u32 segment, u8 *srcStart, u8 *srcEnd) {
     } else {
     }
     return gDecompressionHeap;
+#else
+    dma_read(gDecompressionHeap, srcStart, srcEnd);
+    set_segment_base_addr(segment, gDecompressionHeap);
+    return gDecompressionHeap;
+#endif
 }
 
 void load_engine_code_segment(void) {
+#ifndef TARGET_NDS
     void *startAddr = (void *) SEG_ENGINE;
     u32 totalSize = SEG_FRAMEBUFFERS - SEG_ENGINE;
     UNUSED u32 alignedSize = ALIGN16(_engineSegmentRomEnd - _engineSegmentRomStart);
@@ -383,6 +415,7 @@ void load_engine_code_segment(void) {
     dma_read(startAddr, _engineSegmentRomStart, _engineSegmentRomEnd);
     osInvalICache(startAddr, totalSize);
     osInvalDCache(startAddr, totalSize);
+#endif
 }
 #endif
 
