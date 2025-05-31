@@ -8,6 +8,8 @@
 #endif
 #include <stdio.h>
 
+#include "nds_include.h"
+
 extern FILE* blob;
 
 extern OSMgrArgs piMgrArgs;
@@ -87,12 +89,19 @@ OSTime osGetTime(void) {
 }
 
 void osWritebackDCacheAll(void) {
+    DC_FlushAll();
 }
 
 void osWritebackDCache(UNUSED void *a, UNUSED size_t b) {
+    DC_FlushRange(a, b);
 }
 
 void osInvalDCache(UNUSED void *a, UNUSED size_t b) {
+    DC_InvalidateRange(a, b);
+}
+
+void osInvalICache(UNUSED void *a, UNUSED size_t b) {
+    IC_InvalidateRange(a, b);
 }
 
 u32 osGetCount(void) {

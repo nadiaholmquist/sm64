@@ -339,8 +339,8 @@ void *load_to_fixed_pool_addr(u8 *destAddr, u8 *srcStart, u8 *srcEnd) {
             bzero(dest, destSize);
             osWritebackDCacheAll();
             dma_read(dest, srcStart, srcEnd);
-            //osInvalICache(dest, destSize);
-            //osInvalDCache(dest, destSize);
+            osInvalICache(dest, destSize);
+            osInvalDCache(dest, destSize);
         }
     } else {
     }
