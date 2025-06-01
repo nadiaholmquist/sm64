@@ -92,8 +92,13 @@ SECTIONS
     }
     END_SEG(entry)
 
-    /* load MIO0 and level data */
-    MIO0_SEG(segment2, 0x02000000)
+    /*
+     * On DS, segment 2 is rather part of the main binary.
+     * This is because passing non-segmented memory addresses through segmented_to_virtual needs to return the same address,
+     * and having a segment 2 will confuse real addresses with ones in segment 2.
+     */
+    /* MIO0_SEG(segment2, 0x02000000) */
+
 #ifdef VERSION_EU
     MIO0_EU_SEG(translation_en, 0x19000000)
     MIO0_EU_SEG(translation_fr, 0x19000000)

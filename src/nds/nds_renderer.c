@@ -86,6 +86,8 @@ DTCM_BSS static int frame_count;
 DTCM_BSS static Vtx_t *vertex_batch[BATCH_SIZE];
 DTCM_BSS static uint8_t batch_count;
 
+ITCM_BSS static uint32_t segment_table[32];
+
 // SM64 code needs these, but we're not actually including the fast3d microcode bins
 u64 rspF3DStart[] = {};
 u64 rspF3DBootStart[] = {};
@@ -105,6 +107,15 @@ struct {
 
 static uint8_t glTexCount;
 static void glTexSync();
+
+void *gfx_segmented_to_virtual(const void *addr) {
+    size_t segment = (uintptr_t) addr >> 24;
+    size_t offset = (uintptr_t) addr & 0x00FFFFFF;
+
+    return (void *) ((segment_table[segment] + offset) | 0x02000000);
+}
+
+
 /*
 
 // This is a modified (and simplified) version of glTexImage2D from libnds
@@ -227,7 +238,7 @@ static void load_texture() {
         // Copy the texture back into VRAM if it was pushed out, pushing out other textures if necessary
         glGenTextures(1, &cur->name);
         glBindTexture(GL_TEXTURE_2D, cur->name);
-        while (!glTexImage2DAsync(GL_TEXTURE_2D, 0, cur->type, cur->size_x, cur->size_y, 0, TEXGEN_TEXCOORD, cur->address)) {
+        while (!glTexImage2DAsync(GL_TEXTURE_2D, 0, cur->type, cur->size_x, cur->size_y, 0, TEXGEN_TEXCOORD, gfx_segmented_to_virtual(cur->address))) {
             glDeleteTextures(1, &texture_map[texture_fifo[texture_fifo_end]].name);
             texture_map[texture_fifo[texture_fifo_end]].name = 0;
             texture_fifo_end = (texture_fifo_end + 1) & 0x7FF;
@@ -259,7 +270,7 @@ static void load_texture() {
     // Copy the texture into VRAM, pushing out other textures if necessary
     glGenTextures(1, &cur->name);
     glBindTexture(GL_TEXTURE_2D, cur->name);
-    while (!glTexImage2DAsync(GL_TEXTURE_2D, 0, cur->type, cur->size_x, cur->size_y, 0, TEXGEN_TEXCOORD, cur->address)) {
+    while (!glTexImage2DAsync(GL_TEXTURE_2D, 0, cur->type, cur->size_x, cur->size_y, 0, TEXGEN_TEXCOORD, gfx_segmented_to_virtual(cur->address))) {
         glDeleteTextures(1, &texture_map[texture_fifo[texture_fifo_end]].name);
         texture_map[texture_fifo[texture_fifo_end]].name = 0;
         texture_fifo_end = (texture_fifo_end + 1) & 0x7FF;
@@ -439,7 +450,7 @@ ITCM_CODE static void draw_vertices(const Vtx_t **v, int count) {
 ITCM_CODE static void g_vtx(Gwords *words) {
     const uint8_t count = ((words->w0 >> 12) & 0xFF);
     const uint8_t index = ((words->w0 >>  0) & 0xFF) >> 1;
-    const Vtx *vertices = (const Vtx*)words->w1;
+    const Vtx *vertices = (const Vtx*) gfx_segmented_to_virtual(words->w1);
 
     // Store vertices in the vertex buffer
     memcpy(&vertex_buffer[index - count], vertices, count * sizeof(Vtx));
@@ -645,6 +656,9 @@ static void g_moveword(Gwords *words) {
         // Unimplemented writes
         case G_MW_CLIP:      break;
         case G_MW_PERSPNORM: break;
+        
+        case G_MW_SEGMENT:
+            segment_table[(words->w0 & 0xFF) / 4] = words->w1;
 
         default:
             //printf("Unsupported G_MOVEWORD index: 0x%.2X\n", index);
@@ -670,7 +684,7 @@ ITCM_CODE static void g_movemem(Gwords *words) {
         case G_MV_LIGHT: {
             // Set light parameters
             const uint8_t index = ((words->w0 >> 8) & 0xFF) / 3;
-            const Light_t *src = (Light_t*)words->w1;
+            const Light_t *src = (Light_t*) gfx_segmented_to_virtual(words->w1);
             struct Light *dst = &lights[index];
             if (index >= 2) { // Not lookat vectors
                 dst->r = src->col[0];
@@ -1017,10 +1031,10 @@ ITCM_CODE static void execute(Gfx* cmd) {
             case G_DL:
                 // Branch to another display list
                 if (cmd->words.w0 & (1 << 16)) { // Without return
-                    cmd = (Gfx*)cmd->words.w1;
+                    cmd = (Gfx*) gfx_segmented_to_virtual(cmd->words.w1);
                     continue;
                 } else { // With return
-                    execute((Gfx*)cmd->words.w1);
+                    execute((Gfx*) gfx_segmented_to_virtual(cmd->words.w1));
                     break;
                 }
 
@@ -1180,7 +1194,7 @@ void draw_frame(Gfx *display_list) {
     fog_status = 0;
 
     // Process and draw the frame
-    //execute(display_list);
+    execute(display_list);
     glFlush(GL_TRANS_MANUALSORT);
 
     // Configure fog based on the frame parameters
