@@ -249,7 +249,7 @@ ROM            := $(BUILD_DIR)/$(TARGET).z64
 endif
 ELF            := $(BUILD_DIR)/$(TARGET).elf
 LIBULTRA       := $(BUILD_DIR)/libultra.a
-LD_SCRIPT      := ds_arm9.ld
+LD_SCRIPT      := sm64.nds.ld
 CHARMAP        := charmap.txt
 CHARMAP_DEBUG  := charmap.debug.txt
 MIO0_DIR       := $(BUILD_DIR)/bin
@@ -483,7 +483,7 @@ endif
 ifeq ($(TARGET_NDS),1)
 
 LIBDIRS := $(BLOCKSDS)/libs/libnds
-TARGET_CFLAGS := -mcpu=arm946e-s+nofp -Wno-error=incompatible-pointer-types -Wno-error=implicit-function-declaration -Wno-error=int-conversion $(foreach dir,$(LIBDIRS),-I$(dir)/include) -DTARGET_NDS -DARM9 -D_LANGUAGE_C -ffunction-sections -fdata-sections #-DENABLE_FPS
+TARGET_CFLAGS := -mcpu=arm946e-s+nofp -Wno-error=incompatible-pointer-types -Wno-error=implicit-function-declaration -Wno-error=int-conversion $(foreach dir,$(LIBDIRS),-I$(dir)/include) -DTARGET_NDS -DARM9 -D_LANGUAGE_C -ffunction-sections -fdata-sections -DUSE_BLOB #-DENABLE_FPS
 ARM7_TARGET_CFLAGS := -mcpu=arm7tdmi -Wno-error=implicit-function-declaration $(foreach dir,$(LIBDIRS),-I$(dir)/include) -DTARGET_NDS -DARM7 -D_LANGUAGE_C
 
 CC_CHECK := $(CC)
@@ -1044,22 +1044,21 @@ $(ARM7): $(ARM7_O_FILES)
 	@$(PRINT) "$(GREEN)Linking ARM7 binary:  $(BLUE)$@ $(NO_COL)\n"
 	$(V)$(CC) -L $(BUILD_DIR) -o $@ $(ARM7_O_FILES) $(ARM7_LDFLAGS)
 
-#$(BUILD_DIR)/data.elf: $(O_FILES) $(MIO0_FILES:.mio0=.o) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(BUILD_DIR)/$(LD_SCRIPT)
-#	$(LD) -o $@ -r $(ASSET_O_FILES) -T $(BUILD_DIR)/$(LD_SCRIPT)
-#	$(OBJCOPY) --weaken $(BUILD_DIR)/data.elf
+$(BUILD_DIR)/segments.a: $(O_FILES) $(MIO0_FILES:.mio0=.o)
+	$(V)$(AR) rcsP -o $@ $(ASSET_O_FILES) $(MIO0_FILES:.mio0=.o)
 
-$(ARM9): $(GFX_O_FILES) $(O_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(BUILD_DIR)/$(LD_SCRIPT) #$(BUILD_DIR)/data.elf
+$(ARM9): $(GFX_O_FILES) $(O_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(BUILD_DIR)/$(LD_SCRIPT) $(BUILD_DIR)/segments.a
 	@$(PRINT) "$(GREEN)Linking ARM9 binary:  $(BLUE)$@ $(NO_COL)\n"
-	$(V)#$(CC) -L $(BUILD_DIR) -o $@ $(GFX_O_FILES) $(CODE_O_FILES) $(ULTRA_O_FILES) $(LDFLAGS) -Wl,-Map -Wl,$(BUILD_DIR)/sm64.$(VERSION).arm9.map -Wl,--just-symbols=$(BUILD_DIR)/data.elf
-	$(V)$(CC) -L $(BUILD_DIR) -o $@ $(GFX_O_FILES) $(O_FILES) $(ULTRA_O_FILES) $(LDFLAGS) -Wl,-Map -Wl,$(BUILD_DIR)/sm64.$(VERSION).arm9.map -Wl,--just-symbols=$(BUILD_DIR)/data.elf
-
-#$(BUILD_DIR)/final-assets.bin: $(ARM9) $(BUILD_DIR)/data.elf
-	#$(LD) -o $(BUILD_DIR)/final-assets.elf $(BUILD_DIR)/data.elf --just-symbols=$(ARM9)
-	#llvm-objcopy -O binary --only-section='.sm64*' $(BUILD_DIR)/final-assets.elf $@
+	$(V)$(CC) -L $(BUILD_DIR) -o $@ $(GFX_O_FILES) $(CODE_O_FILES) $(ULTRA_O_FILES) $(BUILD_DIR)/segments.a $(LDFLAGS) -Wl,-Map -Wl,$(BUILD_DIR)/sm64.$(VERSION).arm9.map -Wl,--just-symbols=$(BUILD_DIR)/data.elf
 
 $(ROM): $(ARM7) $(ARM9)
 	@$(PRINT) "$(GREEN)Building ROM: $(BLUE)$@ $(NO_COL)\n"
-	$(V)$(NDSTOOL) -c $@ -9 $(ARM9) -7 $(ARM7)
+	rm -rf extracted-segments $(BUILD_DIR)/nitro out.bin
+	python3 tools/segments.py
+	mkdir -p $(BUILD_DIR)/nitro
+	mv out.bin $(BUILD_DIR)/nitro/blob.bin
+	rm -r extracted-segments
+	$(V)$(NDSTOOL) -c $@ -9 $(ARM9) -7 $(ARM7) -d $(BUILD_DIR)/nitro
 else
 # Link libultra
 $(BUILD_DIR)/libultra.a: $(ULTRA_O_FILES)

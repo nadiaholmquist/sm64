@@ -3,18 +3,23 @@
     segment (rw) : ORIGIN = 0x00000000, LENGTH = 16M * 32
 }*/
 
+#define SEGMENTS BUILD_DIR/segments.a:BUILD_DIR
+//#define SEGMENTS BUILD_DIR
+
 MEMORY {
-    fakerom     : ORIGIN = 0x0, LENGTH = 16M
-    segment     : ORIGIN = 0x0, LENGTH = 512M
+    fakerom     : ORIGIN = 0x00000000, LENGTH = 16M
+    segment     : ORIGIN = 0x00000000, LENGTH = 512M
 }
+
+//#define fakerom ewram
 
 #define BEGIN_SEG(name, addr) \
     _##name##SegmentStart = ADDR(.sm64.name); \
     _##name##SegmentRomStart = LOADADDR(.sm64.name); \
-    .sm64.name (addr) : 
+    .sm64.name addr :
 
 #define END_SEG(name) \
-    > segment AT> ewram  \
+    > segment AT> fakerom \
     _##name##SegmentEnd = ADDR(.sm64.name) + SIZEOF(.sm64.name); \
     _##name##SegmentRomEnd = LOADADDR(.sm64.name) + SIZEOF(.sm64.name);
 
@@ -29,7 +34,7 @@ MEMORY {
 #define MIO0_SEG(name, segAddr) \
     BEGIN_SEG(name##_mio0, segAddr) \
     { \
-        KEEP(BUILD_DIR/bin/name.o(.data* .rodata*)); \
+        KEEP(SEGMENTS/bin/name.o(.data* .rodata*)); \
         . = ALIGN(0x10); \
     } \
     END_SEG(name##_mio0)
@@ -37,7 +42,7 @@ MEMORY {
 #define MIO0_EU_SEG(name, segAddr) \
     BEGIN_SEG(name##_mio0, segAddr) \
     { \
-        KEEP(BUILD_DIR/bin/eu/name.o(.data* .rodata*)); \
+        KEEP(SEGMENTS/bin/eu/name.o(.data* .rodata*)); \
         . = ALIGN(0x10); \
     } \
     END_SEG(name##_mio0)
@@ -45,27 +50,27 @@ MEMORY {
 #define STANDARD_LEVEL(name) \
     BEGIN_SEG(name##_segment_7, 0x07000000) \
     { \
-        KEEP(BUILD_DIR/levels/name/leveldata.o(.data* .rodata*)); \
+        KEEP(SEGMENTS/levels/name/leveldata.o(.data* .rodata*)); \
         . = ALIGN(0x10); \
     } \
     END_SEG(name##_segment_7) \
     BEGIN_SEG(name, 0x0E000000) \
     { \
-        BUILD_DIR/levels/name/script.o(.data* .rodata*); \
-        BUILD_DIR/levels/name/geo.o(.data* .rodata*); \
+        SEGMENTS/levels/name/script.o(.data* .rodata*); \
+        SEGMENTS/levels/name/geo.o(.data* .rodata*); \
     } \
     END_SEG(name)
 
 #define STANDARD_OBJECTS(name, segAddr, geoAddr) \
     BEGIN_SEG(name##_mio0, segAddr) \
     { \
-        KEEP(BUILD_DIR/actors/name.o(.data* .rodata*)); \
+        KEEP(SEGMENTS/actors/name.o(.data* .rodata*)); \
         . = ALIGN(0x10); \
     } \
     END_SEG(name##_mio0) \
     BEGIN_SEG(name##_geo, geoAddr) \
     { \
-        BUILD_DIR/actors/name##_geo.o(.data* .rodata*); \
+        SEGMENTS/actors/name##_geo.o(.data* .rodata*); \
     } \
     END_SEG(name##_geo)
 
@@ -88,7 +93,7 @@ SECTIONS
 
     BEGIN_SEG(entry, 0x10000000)
     {
-        BUILD_DIR/levels/entry.o(.data* .rodata*);
+        SEGMENTS/levels/entry.o(.data* .rodata*);
     }
     END_SEG(entry)
 
@@ -134,20 +139,20 @@ SECTIONS
     /* use segmented addressing for behaviors */
     BEGIN_SEG(behavior, 0x13000000)
     {
-        BUILD_DIR/data/behavior_data.o(.data* .rodata*);
+        SEGMENTS/data/behavior_data.o(.data* .rodata*);
     }
     END_SEG(behavior)
 
     /* 0x268020 0x268020-0 [0] */
     BEGIN_SEG(intro, 0x14000000)
     {
-        BUILD_DIR/levels/intro/script.o(.data* .rodata*);
-        BUILD_DIR/levels/intro/geo.o(.data* .rodata*);
+        SEGMENTS/levels/intro/script.o(.data* .rodata*);
+        SEGMENTS/levels/intro/geo.o(.data* .rodata*);
     }
     END_SEG(intro)
     BEGIN_SEG(intro_segment_7, 0x07000000)
     {
-        KEEP(BUILD_DIR/levels/intro/leveldata.o(.data* .rodata*));
+        KEEP(SEGMENTS/levels/intro/leveldata.o(.data* .rodata*));
         . = ALIGN(0x10);
     }
     END_SEG(intro_segment_7)
@@ -159,30 +164,30 @@ SECTIONS
     /* 271B20-2A42A0 [32780] */
     BEGIN_SEG(gd_dynlists, 0x04000000)
     {
-        BUILD_DIR/libgoddard.a:dynlist_*(.data* .rodata*);
-        BUILD_DIR/libgoddard.a:anim_*(.data* .rodata*);
-        BUILD_DIR/libgoddard.a:*.o(.data* .rodata*);
-        BUILD_DIR/libgoddard.a:*.o(.rodata*);
+        SEGMENTS/libgoddard.a:dynlist_*(.data* .rodata*);
+        SEGMENTS/libgoddard.a:anim_*(.data* .rodata*);
+        SEGMENTS/libgoddard.a:*.o(.data* .rodata*);
+        SEGMENTS/libgoddard.a:*.o(.rodata*);
     }
     END_SEG(gd_dynlists)
 #endif
 
     BEGIN_SEG(menu, 0x14000000)
     {
-        BUILD_DIR/levels/menu/script.o(.data* .rodata*);
-        BUILD_DIR/levels/menu/geo.o(.data* .rodata*);
+        SEGMENTS/levels/menu/script.o(.data* .rodata*);
+        SEGMENTS/levels/menu/geo.o(.data* .rodata*);
     }
     END_SEG(menu)
     BEGIN_SEG(menu_segment_7, 0x07000000)
     {
-        KEEP(BUILD_DIR/levels/menu/leveldata.o(.data* .rodata*));
+        KEEP(SEGMENTS/levels/menu/leveldata.o(.data* .rodata*));
         . = ALIGN(0x10);
     }
     END_SEG(menu_segment_7)
 
     BEGIN_SEG(scripts, 0x15000000)
     {
-        BUILD_DIR/levels/scripts.o(.data* .rodata*);
+        SEGMENTS/levels/scripts.o(.data* .rodata*);
     }
     END_SEG(scripts)
 
@@ -222,16 +227,17 @@ SECTIONS
 
     BEGIN_SEG(assets, )
     {
-        BUILD_DIR/assets/mario_anim_data.o(.data*);
-        BUILD_DIR/assets/mario_anim_data.o(.rodata*);
-        BUILD_DIR/assets/demo_data.o(.data*);
-        BUILD_DIR/sound/sound_data.o(.data*);
-    } > ewram AT> ewram
+        SEGMENTS/assets/mario_anim_data.o(.data*);
+        SEGMENTS/assets/mario_anim_data.o(.rodata*);
+        SEGMENTS/assets/demo_data.o(.data*);
+        SEGMENTS/sound/sound_data.o(.data*);
+    } > fakerom AT> fakerom
+    _assetsSegmentRomEnd = LOADADDR(.sm64.assets) + SIZEOF(.sm64.assets);
 
     /* Discard everything not specifically mentioned above. */
-    /*/DISCARD/ :
+    /DISCARD/ :
     {
-        *(*);
-    }*/
+        SEGMENTS(*);
+    }
 
 }

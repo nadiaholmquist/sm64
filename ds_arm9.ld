@@ -123,17 +123,16 @@ SECTIONS
     __text_end = . ;
 }
 
-#include "sm64.nds.ld"
-
 SECTIONS {
 
     .rodata :
     {
-        *(EXCLUDE_FILE(*.twl*) .rodata)
+        *(EXCLUDE_FILE(*.twl* *segments.a*) .rodata)
         *all.rodata*(*)
-        *(EXCLUDE_FILE(*.twl*) .roda)
-        *(EXCLUDE_FILE(*.twl*) .rodata.*)
+        *(EXCLUDE_FILE(*.twl* *segments.a*) .roda)
+        *(EXCLUDE_FILE(*.twl* *segments.a*) .rodata.*)
         *(EXCLUDE_FILE(*.twl*) .gnu.linkonce.r*)
+        *segment2.o(.data* .*rodata*);
         SORT(CONSTRUCTORS)
         . = ALIGN(4);   /* REQUIRED. LD is flaky without it. */
     } >ewram :main = 0xff
@@ -226,8 +225,8 @@ SECTIONS {
     .data ALIGN(4) :
     {
         __data_start = ABSOLUTE(.);
-        *(EXCLUDE_FILE(*.twl*) .data)
-        *(EXCLUDE_FILE(*.twl*) .data.*)
+        *(EXCLUDE_FILE(*.twl* *segments.a*) .data)
+        *(EXCLUDE_FILE(*.twl* *segments.a*) .data.*)
         *(EXCLUDE_FILE(*.twl*) .gnu.linkonce.d*)
         CONSTRUCTORS
         . = ALIGN(4);
@@ -423,6 +422,11 @@ SECTIONS {
     .debug_sup      0 : { *(.debug_sup) }
     .ARM.attributes 0 : { KEEP (*(.ARM.attributes)) KEEP (*(.gnu.attributes)) }
     .note.gnu.arm.ident 0 : { KEEP (*(.note.gnu.arm.ident)) }
+}
+
+INCLUDE build/us_nds/sm64.nds.ld
+
+SECTIONS {
     /DISCARD/ : { *(.note.GNU-stack) *(.gnu_debuglink) *(.gnu.lto_*) }
 }
 

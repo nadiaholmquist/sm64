@@ -23,7 +23,7 @@ void exec_display_list(struct SPTask *spTask) {
 
 static void update_audio(void) {
     // Update audio at the ARM7's request
-    if (nds_audio_state == 0) {
+    if (nds_audio_state == 0 && isDSiMode()) {
         // Update the audio logic at 30 Hz
         if ((audio_step = (audio_step + 1) & 7) == 0) {
             update_game_sound();
@@ -63,11 +63,16 @@ int main(void) {
 
     // Initialize various components
     fatInitDefault();
+    bool ok = nitroFSInit(NULL);
+    if (!ok) {
+        printf("Failed to init NitroFS!");
+        for(;;);
+    }
 
 #ifdef USE_BLOB
-    blob = fopen("sd:/blob.bin", "r");
+    blob = fopen("nitro:/blob.bin", "r");
     if (!blob) {
-        printf("no blob\n");
+        printf("Could not load the segments blob from NitroFS.");
         for(;;);
     }
 #endif
