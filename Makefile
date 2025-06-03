@@ -1048,16 +1048,20 @@ $(BUILD_DIR)/segments.a: $(O_FILES) $(MIO0_FILES:.mio0=.o)
 	$(V)$(AR) rcsP -o $@ $(ASSET_O_FILES) $(MIO0_FILES:.mio0=.o)
 
 $(ARM9): $(GFX_O_FILES) $(O_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(BUILD_DIR)/$(LD_SCRIPT) $(BUILD_DIR)/segments.a
+	$(V)rm -rf $(BUILD_DIR)/nitro
 	@$(PRINT) "$(GREEN)Linking ARM9 binary:  $(BLUE)$@ $(NO_COL)\n"
 	$(V)$(CC) -L $(BUILD_DIR) -o $@ $(GFX_O_FILES) $(CODE_O_FILES) $(ULTRA_O_FILES) $(BUILD_DIR)/segments.a $(LDFLAGS) -Wl,-Map -Wl,$(BUILD_DIR)/sm64.$(VERSION).arm9.map -Wl,--just-symbols=$(BUILD_DIR)/data.elf
 
-$(ROM): $(ARM7) $(ARM9)
+$(BUILD_DIR)/nitro: $(ARM9)
+	@$(PRINT) "$(GREEN)Extracting data for NitroFS: $(BLUE)$@ $(NO_COL)\n"
+	$(V)rm -rf extracted-segments $@ out.bin
+	$(V)$(PYTHON) tools/segments.py
+	$(V)mkdir -p $@
+	$(V)mv out.bin $(BUILD_DIR)/nitro/blob.bin
+	$(V)rm -r extracted-segments
+
+$(ROM): $(ARM7) $(ARM9) $(BUILD_DIR)/nitro
 	@$(PRINT) "$(GREEN)Building ROM: $(BLUE)$@ $(NO_COL)\n"
-	rm -rf extracted-segments $(BUILD_DIR)/nitro out.bin
-	python3 tools/segments.py
-	mkdir -p $(BUILD_DIR)/nitro
-	mv out.bin $(BUILD_DIR)/nitro/blob.bin
-	rm -r extracted-segments
 	$(V)$(NDSTOOL) -c $@ -9 $(ARM9) -7 $(ARM7) -d $(BUILD_DIR)/nitro
 else
 # Link libultra

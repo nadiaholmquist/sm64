@@ -8,14 +8,18 @@ import re
 toolchain = ""
 
 if platform.uname().system == "Linux":
-    wonderful = "/opt/wonderful/toolchains/gcc-arm-none-eabi/bin"
+    wonderful = "/opt/wonderful/toolchain/gcc-arm-none-eabi/bin"
     toolchain = f"{wonderful}/"
 
 nm = f"{toolchain}arm-none-eabi-nm"
 objcopy = f"{toolchain}arm-none-eabi-objcopy"
 elf = "build/us_nds/sm64.us.arm9.elf"
 
-l = subprocess.getoutput(f"{nm} {elf}")
+(s, l) = subprocess.getstatusoutput(f"{nm} {elf}")
+
+if s != 0:
+    print("failed to run nm on the elf")
+    exit(1)
 
 starts = {}
 ends = {}
@@ -50,7 +54,7 @@ with open("out.bin", "wb") as out:
     for (seg, start) in starts.items():
         end = ends[seg]
         segsize = end - start
-        print(f"{seg} {start} {end} size: {segsize}")
+        #print(f"{seg} {start} {end} size: {segsize}")
         if seg == "goddard":
             continue
 
@@ -63,7 +67,7 @@ with open("out.bin", "wb") as out:
             exit(1)
 
         content = open(fname, "rb").read()
-        print(len(content))
+        #print(len(content))
 
         out.seek(start)
         out.write(content)
