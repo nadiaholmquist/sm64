@@ -86,7 +86,7 @@ DTCM_BSS static int frame_count;
 DTCM_BSS static Vtx_t *vertex_batch[BATCH_SIZE];
 DTCM_BSS static uint8_t batch_count;
 
-ITCM_BSS static uint32_t segment_table[32];
+DTCM_BSS static uint32_t segment_table[32];
 
 // SM64 code needs these, but we're not actually including the fast3d microcode bins
 u64 rspF3DStart[] = {};
