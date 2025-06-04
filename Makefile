@@ -483,7 +483,7 @@ endif
 ifeq ($(TARGET_NDS),1)
 
 LIBDIRS := $(BLOCKSDS)/libs/libnds
-TARGET_CFLAGS := -mcpu=arm946e-s+nofp -Wno-error=incompatible-pointer-types -Wno-error=implicit-function-declaration -Wno-error=int-conversion $(foreach dir,$(LIBDIRS),-I$(dir)/include) -DTARGET_NDS -DARM9 -D_LANGUAGE_C -ffunction-sections -fdata-sections -DUSE_BLOB #-DENABLE_FPS
+TARGET_CFLAGS := -mcpu=arm946e-s+nofp -Wno-error=incompatible-pointer-types -Wno-error=implicit-function-declaration -Wno-error=int-conversion $(foreach dir,$(LIBDIRS),-I$(dir)/include) -DTARGET_NDS -DARM9 -D_LANGUAGE_C -ffunction-sections -fdata-sections #-DENABLE_FPS
 ARM7_TARGET_CFLAGS := -mcpu=arm7tdmi -Wno-error=implicit-function-declaration $(foreach dir,$(LIBDIRS),-I$(dir)/include) -DTARGET_NDS -DARM7 -D_LANGUAGE_C
 
 CC_CHECK := $(CC)
@@ -1054,11 +1054,7 @@ $(ARM9): $(GFX_O_FILES) $(O_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(BUILD_D
 
 $(BUILD_DIR)/nitro: $(ARM9)
 	@$(PRINT) "$(GREEN)Extracting data for NitroFS: $(BLUE)$@ $(NO_COL)\n"
-	$(V)rm -rf extracted-segments $@ out.bin
-	$(V)$(PYTHON) tools/segments.py
-	$(V)mkdir -p $@
-	$(V)mv out.bin $(BUILD_DIR)/nitro/blob.bin
-	$(V)rm -r extracted-segments
+	$(V)$(PYTHON) tools/segments.py $(BUILD_DIR)
 
 $(ROM): $(ARM7) $(ARM9) $(BUILD_DIR)/nitro
 	@$(PRINT) "$(GREEN)Building ROM: $(BLUE)$@ $(NO_COL)\n"

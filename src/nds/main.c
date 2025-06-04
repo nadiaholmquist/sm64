@@ -9,12 +9,11 @@
 #include "audio/seqplayer.h"
 #include "game/game_init.h"
 #include "nds_renderer.h"
+#include "nds_rom.h"
 
 u8 nds_audio_state;
 static u8 audio_step;
 static u8 fps;
-
-FILE* blob;
 
 void exec_display_list(struct SPTask *spTask) {
     draw_frame((Gfx*)spTask->task.t.data_ptr);
@@ -59,23 +58,13 @@ int main(void) {
 
     defaultExceptionHandler();
 
+    nds_open_rom();
+
     consoleDemoInit();
+    consoleDebugInit(DebugDevice_NOCASH);
 
     // Initialize various components
     fatInitDefault();
-    bool ok = nitroFSInit(NULL);
-    if (!ok) {
-        printf("Failed to init NitroFS!");
-        for(;;);
-    }
-
-#ifdef USE_BLOB
-    blob = fopen("nitro:/blob.bin", "r");
-    if (!blob) {
-        printf("Could not load the segments blob from NitroFS.");
-        for(;;);
-    }
-#endif
 
     renderer_init();
     audio_init();

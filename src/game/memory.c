@@ -3,15 +3,15 @@
 #include <string.h>
 #endif
 
-//#define USE_BLOB
-
 #include "sm64.h"
 
 #define INCLUDED_FROM_MEMORY_C
 
 #include "buffers/zbuffer.h"
 #include "buffers/buffers.h"
+#ifndef TARGET_NDS
 #include "decompress.h"
+#endif
 #include "game_init.h"
 #include "main.h"
 #include "memory.h"
@@ -19,8 +19,7 @@
 #include "segment_symbols.h"
 
 #ifdef TARGET_NDS
-#include <stdio.h>
-extern FILE* blob;
+#include "nds/nds_rom.h"
 #endif
 
 // round up to the next multiple
@@ -284,9 +283,8 @@ static void dma_read(u8 *dest, u8 *srcStart, u8 *srcEnd) {
         srcStart += copySize;
         size -= copySize;
     }
-#elif defined(TARGET_NDS) && defined(USE_BLOB)
-    fseek(blob, srcStart, SEEK_SET);
-    fread(dest, srcEnd - srcStart, 1, blob);
+#elif defined(TARGET_NDS)
+    nds_read_rom((u32) srcStart, (u32) srcEnd, dest);
 #else
     memcpy(dest, srcStart, srcEnd - srcStart);
 #endif
@@ -313,7 +311,15 @@ static void *dynamic_dma_read(u8 *srcStart, u8 *srcEnd, u32 side) {
  * address to this block.
  */
 void *load_segment(s32 segment, u8 *srcStart, u8 *srcEnd, u32 side) {
+#ifdef TARGET_NDS
+    void *addr = nds_get_cached_segment(srcStart);
+
+    if (addr == NULL) {
+        addr = dynamic_dma_read(srcStart, srcEnd, side);
+    }
+#else
     void *addr = dynamic_dma_read(srcStart, srcEnd, side);
+#endif
 
     if (addr != NULL) {
         set_segment_base_addr(segment, addr);

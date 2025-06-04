@@ -8,9 +8,7 @@
 #endif
 #include <stdio.h>
 
-#include "nds_include.h"
-
-extern FILE* blob;
+#include "nds_rom.h"
 
 extern OSMgrArgs piMgrArgs;
 
@@ -19,12 +17,7 @@ u64 osClockRate = 62500000;
 s32 osPiStartDma(UNUSED OSIoMesg *mb, UNUSED s32 priority, UNUSED s32 direction,
                  uintptr_t devAddr, void *vAddr, size_t nbytes,
                  UNUSED OSMesgQueue *mq) {
-#ifdef USE_BLOB
-    fseek(blob, devAddr, SEEK_SET);
-    fread(vAddr, nbytes, 1, blob);
-#else
-    memcpy(vAddr, (const void *) devAddr, nbytes);
-#endif
+    nds_read_rom(devAddr, devAddr + nbytes, vAddr);
     return 0;
 }
 
