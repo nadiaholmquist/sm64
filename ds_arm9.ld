@@ -424,7 +424,7 @@ SECTIONS {
     .note.gnu.arm.ident 0 : { KEEP (*(.note.gnu.arm.ident)) }
 }
 
-INCLUDE build/us_nds/sm64.nds.ld
+#include "sm64.nds.ld"
 
 SECTIONS {
     /DISCARD/ : { *(.note.GNU-stack) *(.gnu_debuglink) *(.gnu.lto_*) }

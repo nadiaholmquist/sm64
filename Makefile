@@ -249,7 +249,11 @@ ROM            := $(BUILD_DIR)/$(TARGET).z64
 endif
 ELF            := $(BUILD_DIR)/$(TARGET).elf
 LIBULTRA       := $(BUILD_DIR)/libultra.a
-LD_SCRIPT      := sm64.nds.ld
+ifeq ($(TARGET_NDS),1)
+LD_SCRIPT      := ds_arm9.ld
+else
+LD_SCRIPT      := sm64.ld
+endif
 CHARMAP        := charmap.txt
 CHARMAP_DEBUG  := charmap.debug.txt
 MIO0_DIR       := $(BUILD_DIR)/bin
@@ -1036,7 +1040,6 @@ $(BUILD_DIR)/$(LD_SCRIPT): $(LD_SCRIPT)
 	$(call print,Preprocessing linker script:,$<,$@)
 	$(V)$(CPP) $(CPPFLAGS) -DBUILD_DIR=$(BUILD_DIR) -MMD -MP -MT $@ -MF $@.d -o $@ $<
 
-
 # Build NDS ROM
 ifeq ($(TARGET_NDS),1)
 
@@ -1050,7 +1053,7 @@ $(BUILD_DIR)/segments.a: $(O_FILES) $(MIO0_FILES:.mio0=.o)
 $(ARM9): $(GFX_O_FILES) $(O_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(BUILD_DIR)/$(LD_SCRIPT) $(BUILD_DIR)/segments.a
 	$(V)rm -rf $(BUILD_DIR)/nitro
 	@$(PRINT) "$(GREEN)Linking ARM9 binary:  $(BLUE)$@ $(NO_COL)\n"
-	$(V)$(CC) -L $(BUILD_DIR) -o $@ $(GFX_O_FILES) $(CODE_O_FILES) $(ULTRA_O_FILES) $(BUILD_DIR)/segments.a $(LDFLAGS) -Wl,-Map -Wl,$(BUILD_DIR)/sm64.$(VERSION).arm9.map -Wl,--just-symbols=$(BUILD_DIR)/data.elf
+	$(V)$(CC) -L $(BUILD_DIR) -o $@ $(GFX_O_FILES) $(CODE_O_FILES) $(ULTRA_O_FILES) $(BUILD_DIR)/segments.a $(LDFLAGS) -Wl,-T -Wl,$(BUILD_DIR)/$(LD_SCRIPT) -Wl,-Map -Wl,$(BUILD_DIR)/sm64.$(VERSION).arm9.map
 
 $(BUILD_DIR)/nitro: $(ARM9)
 	@$(PRINT) "$(GREEN)Extracting data for NitroFS: $(BLUE)$@ $(NO_COL)\n"

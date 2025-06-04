@@ -2,6 +2,8 @@
 
 #include "nds_audio.h"
 
+#if defined(VERSION_JP) || defined(VERSION_US)
+
 // Better frequency calculation
 #undef SOUND_FREQ
 #define SOUND_FREQ(n) (-(BUS_CLOCK >> 1) / (n))
@@ -71,3 +73,4 @@ void play_notes(struct Note *notes) {
         }
     }
 }
+#endif

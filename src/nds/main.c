@@ -21,6 +21,7 @@ void exec_display_list(struct SPTask *spTask) {
 }
 
 static void update_audio(void) {
+#if defined(VERSION_JP) || defined(VERSION_US)
     // Update audio at the ARM7's request
     if (nds_audio_state == 0 && isDSiMode()) {
         // Update the audio logic at 30 Hz
@@ -42,6 +43,7 @@ static void update_audio(void) {
 
     // Tell the ARM7 it can go ahead
     IPC_SendSync(0);
+#endif
 }
 
 static void update_fps(void) {

@@ -9,6 +9,7 @@ static void send_input(void) {
     inputGetAndSend();
 }
 
+#if defined(VERSION_JP) || defined(VERSION_US)
 static void update_audio(void) {
     // Request an audio update from the ARM9
     IPC_SendSync(0);
@@ -17,6 +18,7 @@ static void update_audio(void) {
     // Play the current notes
     play_notes(gNotes);
 }
+#endif
 
 static void power_down(void) {
     running = false;
@@ -35,6 +37,7 @@ int main(void) {
     irqSet(IRQ_VCOUNT, send_input);
     irqEnable(IRQ_VCOUNT | IRQ_IPC_SYNC);
 
+#if defined(VERSION_JP) || defined(VERSION_US)
     // Get a pointer to the audio data from the ARM9
     while (!fifoCheckValue32(FIFO_USER_01));
     gNotes = (struct Note*)fifoGetValue32(FIFO_USER_01);
@@ -42,6 +45,7 @@ int main(void) {
     // Prepare to update the audio at 240 Hz
     enableSound();
     timerStart(0, ClockDivider_64, TIMER_FREQ_64(240), update_audio);
+#endif
     running = true;
 
     // Wait idly for interrupts
