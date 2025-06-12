@@ -9,6 +9,7 @@
 #define SOUND_FREQ(n) (-(BUS_CLOCK >> 1) / (n))
 
 static u16 high_freqs;
+extern struct SampleCacheEntry (*sample_cache)[32];
 
 static u16 calculate_freq(f32 frequency) {
     // Calculate the DS frequency for a note
@@ -34,26 +35,33 @@ void play_notes(struct Note *notes) {
     for (int i = 0; i < 16; i++) {
         struct Note *note = &notes[i];
 
-        if (note->enabled && note->sound != NULL) {
+        if (note->enabled && note->sampleDmaIndex != 0) {
             if (note->needsInit || ((SCHANNEL_CR(i) & SCHANNEL_ENABLE) && (note->frequency >= 2.0f) != (bool)(high_freqs & BIT(i)))) {
+                if (note->sound == nullptr || note->sound->sample == nullptr || note->sound->sample->loop == nullptr)
+                    continue;
+
                 const struct AudioBankSample *sample = note->sound->sample;
                 const u32 loop = (sample->loop->count ? SOUND_REPEAT : SOUND_ONE_SHOT);
 
                 // Ensure the channel is properly reset
                 SCHANNEL_CR(i) &= ~SCHANNEL_ENABLE;
 
-                if (note->frequency >= 2.0f && *(u32*)sample->sampleAddr != 0) {
+                u8* sampleAddr = (*sample_cache)[note->sampleDmaIndex - 1].allocPos;
+                if (sampleAddr == nullptr)
+                    continue;
+
+                if (note->frequency >= 2.0f) {
                     // If the frequency is too high, play the downsampled version at half frequency
-                    SCHANNEL_SOURCE(i) = (u32)sample->sampleAddr + *(u32*)sample->sampleAddr + 4;
-                    SCHANNEL_REPEAT_POINT(i) = sample->loop->start / 2 / sizeof(u32) + 1;
-                    SCHANNEL_LENGTH(i) = (sample->loop->end - sample->loop->start) / 2 / sizeof(u32) + 1;
+                    SCHANNEL_SOURCE(i) = (u32)sampleAddr + *(u32*)sampleAddr + 4;
+                    SCHANNEL_REPEAT_POINT(i) = sample->loop->start / 2 / sizeof(u32);
+                    SCHANNEL_LENGTH(i) = (sample->loop->end - sample->loop->start) / 2 / sizeof(u32);
                     SCHANNEL_TIMER(i) = calculate_freq(note->frequency / 2);
                     high_freqs |= BIT(i);
                 } else {
                     // Play the normal version at full frequency
-                    SCHANNEL_SOURCE(i) = (u32)sample->sampleAddr + 4;
-                    SCHANNEL_REPEAT_POINT(i) = sample->loop->start / sizeof(u32) + 1;
-                    SCHANNEL_LENGTH(i) = (sample->loop->end - sample->loop->start) / sizeof(u32) + 1;
+                    SCHANNEL_SOURCE(i) = (u32)sampleAddr + 4;
+                    SCHANNEL_REPEAT_POINT(i) = sample->loop->start / sizeof(u32);
+                    SCHANNEL_LENGTH(i) = (sample->loop->end - sample->loop->start) / sizeof(u32);
                     SCHANNEL_TIMER(i) = calculate_freq(note->frequency);
                     high_freqs &= ~BIT(i);
                 }

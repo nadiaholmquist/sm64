@@ -3,6 +3,7 @@
 #include "nds_audio.h"
 
 struct Note *gNotes;
+struct SampleCacheEntry (*sample_cache)[32];
 static bool running;
 
 static void send_input(void) {
@@ -10,11 +11,7 @@ static void send_input(void) {
 }
 
 #if defined(VERSION_JP) || defined(VERSION_US)
-static void update_audio(void) {
-    // Request an audio update from the ARM9
-    IPC_SendSync(0);
-    swiIntrWait(0, IRQ_IPC_SYNC);
-
+static void update_audio(UNUSED long unsigned value32, UNUSED void* userdata) {
     // Play the current notes
     play_notes(gNotes);
 }
@@ -41,10 +38,12 @@ int main(void) {
     // Get a pointer to the audio data from the ARM9
     while (!fifoCheckValue32(FIFO_USER_01));
     gNotes = (struct Note*)fifoGetValue32(FIFO_USER_01);
+    sample_cache = (struct SampleCacheEntry(*)[32]) fifoGetValue32(FIFO_USER_01);
 
     // Prepare to update the audio at 240 Hz
     enableSound();
-    timerStart(0, ClockDivider_64, TIMER_FREQ_64(240), update_audio);
+    //timerStart(0, ClockDivider_64, TIMER_FREQ_64(240), update_audio);
+    fifoSetValue32Handler(FIFO_USER_01, update_audio, NULL);
 #endif
     running = true;
 

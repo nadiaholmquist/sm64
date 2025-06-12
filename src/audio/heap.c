@@ -9,6 +9,10 @@
 
 #define ALIGN16(val) (((val) + 0xF) & ~0xF)
 
+#ifdef TARGET_NDS
+#include "../nds/nds_include.h"
+#endif
+
 struct PoolSplit {
     u32 wantSeq;
     u32 wantBank;
@@ -1316,7 +1320,10 @@ void audio_reset_session(void) {
     gNotes = soundAlloc(&gNotesAndBuffersPool, gMaxSimultaneousNotes * sizeof(struct Note));
 #ifdef TARGET_NDS
     // Point to the uncached RAM mirror so both CPUs can access the data reliably
-    gNotes = (struct Note*)((u32)gNotes + 0xA000000);
+    if (isDSiMode())
+        gNotes = (struct Note*)((u32)gNotes + 0xA000000);
+    else
+        gNotes = (struct Note*)((u32)gNotes + 0x0040000);
 #endif
     note_init_all();
     init_note_free_list();
