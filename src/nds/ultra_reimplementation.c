@@ -3,12 +3,11 @@
 #include "lib/src/libultra_internal.h"
 #include "macros.h"
 
-#ifdef TARGET_WEB
-#include <emscripten.h>
-#endif
 #include <stdio.h>
 
 #include "nds_rom.h"
+
+#define SAVE_FILE "sd:/sm64_save_file.bin"
 
 extern OSMgrArgs piMgrArgs;
 
@@ -135,28 +134,7 @@ s32 osEepromLongRead(UNUSED OSMesgQueue *mq, u8 address, u8 *buffer, int nbytes)
     u8 content[512];
     s32 ret = -1;
 
-#ifdef TARGET_WEB
-    if (EM_ASM_INT({
-        var s = localStorage.sm64_save_file;
-        if (s && s.length === 684) {
-            try {
-                var binary = atob(s);
-                if (binary.length === 512) {
-                    for (var i = 0; i < 512; i++) {
-                        HEAPU8[$0 + i] = binary.charCodeAt(i);
-                    }
-                    return 1;
-                }
-            } catch (e) {
-            }
-        }
-        return 0;
-    }, content)) {
-        memcpy(buffer, content + address * 8, nbytes);
-        ret = 0;
-    }
-#else
-    FILE *fp = fopen("sm64_save_file.bin", "rb");
+    FILE *fp = fopen(SAVE_FILE, "rb");
     if (fp == NULL) {
         return -1;
     }
@@ -165,7 +143,6 @@ s32 osEepromLongRead(UNUSED OSMesgQueue *mq, u8 address, u8 *buffer, int nbytes)
         ret = 0;
     }
     fclose(fp);
-#endif
     return ret;
 }
 
@@ -176,22 +153,11 @@ s32 osEepromLongWrite(UNUSED OSMesgQueue *mq, u8 address, u8 *buffer, int nbytes
     }
     memcpy(content + address * 8, buffer, nbytes);
 
-#ifdef TARGET_WEB
-    EM_ASM({
-        var str = "";
-        for (var i = 0; i < 512; i++) {
-            str += String.fromCharCode(HEAPU8[$0 + i]);
-        }
-        localStorage.sm64_save_file = btoa(str);
-    }, content);
-    s32 ret = 0;
-#else
-    FILE* fp = fopen("sm64_save_file.bin", "wb");
+    FILE* fp = fopen(SAVE_FILE, "wb");
     if (fp == NULL) {
         return -1;
     }
     s32 ret = fwrite(content, 1, 512, fp) == 512 ? 0 : -1;
     fclose(fp);
-#endif
     return ret;
 }
