@@ -28,6 +28,7 @@
 #include "paintings.h"
 #include "engine/graph_node.h"
 #include "level_table.h"
+#include "config.h"
 
 #define CBUTTON_MASK (U_CBUTTONS | D_CBUTTONS | L_CBUTTONS | R_CBUTTONS)
 
@@ -3661,7 +3662,7 @@ s32 move_point_along_spline(Vec3f p, struct CutsceneSplinePoint spline[], s16 *s
     }
     progressChange = (secondSpeed - firstSpeed) * *progress + firstSpeed;
 
-#ifdef VERSION_EU
+#if ENABLE_50HZ
     if (gCamera->cutscene == CUTSCENE_INTRO_PEACH) {
         progressChange += progressChange * 0.19f;
     }
@@ -6425,7 +6426,7 @@ struct CutsceneSplinePoint sIntroPipeToDialogPosition[] = {
 /**
  * Describes the spline that the camera's focus follows, during the same part of the intro as the above.
  */
-#ifdef VERSION_EU
+#if ENABLE_50HZ
 struct CutsceneSplinePoint sIntroPipeToDialogFocus[] = {
     { 0, 25, { -1248, 450, 4596 } }, { 1, 71, { -1258, 485, 4606 } }, { 2, 71, { -1379, 344, 4769 } },
     { 3, 22, { -1335, 366, 4815 } }, { 4, 23, { -1315, 370, 4450 } }, { 5, 40, { -1322, 333, 4591 } },
@@ -6486,7 +6487,7 @@ struct CutsceneSplinePoint sEndingLookUpAtCastle[] = {
 };
 
 struct CutsceneSplinePoint sEndingLookAtSkyFocus[] = {
-#ifdef VERSION_EU
+#if ENABLE_50HZ
     { 0, 50, { 484, 1368, -868 } }, { 0, 72, { 479, 1372, -872 } }, { 0, 50, { 351, 1817, -918 } },
 #else
     { 0, 50, { 484, 1368, -888 } }, { 0, 72, { 479, 1372, -892 } }, { 0, 50, { 351, 1817, -918 } },
@@ -7382,7 +7383,7 @@ BAD_RETURN(s32) cutscene_ending_look_up_at_castle(UNUSED struct Camera *c) {
 BAD_RETURN(s32) cutscene_ending_peach_wakeup(struct Camera *c) {
     cutscene_event(cutscene_ending_reset_spline, c, 0, 0);
     cutscene_event(cutscene_ending_look_up_at_castle, c, 0, 0);
-#ifdef VERSION_EU
+#if ENABLE_50HZ
     cutscene_event(cutscene_ending_look_up_at_castle, c, 265, -1);
     cutscene_spawn_obj(7, 315);
     cutscene_spawn_obj(9, 355);
@@ -7432,7 +7433,7 @@ BAD_RETURN(s32) cutscene_ending_kiss_here_we_go(struct Camera *c) {
  */
 BAD_RETURN(s32) cutscene_ending_kiss(struct Camera *c) {
     cutscene_event(cutscene_ending_kiss_closeup, c, 0, 0);
-#ifdef VERSION_EU
+#if ENABLE_50HZ
     cutscene_event(cutscene_ending_kiss_here_we_go, c, 185, -1);
 #else
     cutscene_event(cutscene_ending_kiss_here_we_go, c, 155, -1);
@@ -9602,7 +9603,7 @@ BAD_RETURN(s32) play_sound_intro_turn_on_hud(UNUSED struct Camera *c) {
  * Fly to the pipe. Near the end, the camera jumps to Lakitu's position and the hud turns on.
  */
 BAD_RETURN(s32) cutscene_intro_peach_fly_to_pipe(struct Camera *c) {
-#if defined(VERSION_US) || defined(VERSION_SH) || defined(VERSION_CN)
+#if defined(VERSION_US) || defined(VERSION_SH) || defined(VERSION_CN) || (defined(VERSION_EU) && !ENABLE_50HZ)
     cutscene_event(play_sound_intro_turn_on_hud, c, 818, 818);
 #elif defined(VERSION_EU)
     cutscene_event(play_sound_intro_turn_on_hud, c, 673, 673);
@@ -9610,7 +9611,7 @@ BAD_RETURN(s32) cutscene_intro_peach_fly_to_pipe(struct Camera *c) {
     cutscene_spawn_obj(6, 1);
     cutscene_event(cutscene_intro_peach_start_flying_music, c, 0, 0);
     cutscene_event(cutscene_intro_peach_start_to_pipe_spline, c, 0, -1);
-#ifdef VERSION_EU
+#if ENABLE_50HZ
     cutscene_event(cutscene_intro_peach_clear_cutscene_status, c, 572, 572);
 #else
     cutscene_event(cutscene_intro_peach_clear_cutscene_status, c, 717, 717);
@@ -10370,7 +10371,7 @@ BAD_RETURN(s32) cutscene_door_mode(struct Camera *c) {
 struct Cutscene sCutsceneEnding[] = {
     { cutscene_ending_mario_fall, 170 },
     { cutscene_ending_mario_land, 70 },
-#ifdef VERSION_EU
+#if ENABLE_50HZ
     { cutscene_ending_mario_land_closeup, 0x44 },
     { cutscene_ending_stars_free_peach,  0x15c },
     { cutscene_ending_peach_appears, 0x6d  },
@@ -10541,7 +10542,7 @@ struct Cutscene sCutsceneUnusedExit[] = {
 struct Cutscene sCutsceneIntroPeach[] = {
     { cutscene_intro_peach_letter, CUTSCENE_LOOP },
     { cutscene_intro_peach_reset_fov, 35 },
-#ifdef VERSION_EU
+#if ENABLE_50HZ
     { cutscene_intro_peach_fly_to_pipe, 675 },
 #else
     { cutscene_intro_peach_fly_to_pipe, 820 },

@@ -7,6 +7,7 @@
 #include "heap.h"
 #include "load.h"
 #include "seqplayer.h"
+#include "config.h"
 
 #define ALIGN16(val) (((val) + 0xF) & ~0xF)
 
@@ -966,8 +967,13 @@ void audio_init() {
     }
 #endif
 
+#if ENABLE_50HZ
     D_EU_802298D0 = 20.03042f;
     gRefreshRate = 50;
+#else
+    D_EU_802298D0 = 16.713f;
+    gRefreshRate = 60;
+#endif
     port_eu_init();
     if (k) {
     }

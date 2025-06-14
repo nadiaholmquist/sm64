@@ -10,6 +10,7 @@
 #include "rendering_graph_node.h"
 #include "shadow.h"
 #include "sm64.h"
+#include "config.h"
 
 /**
  * This file contains the code that processes the scene graph for rendering.
@@ -243,7 +244,7 @@ static void geo_process_perspective(struct GraphNodePerspective *node) {
         u16 perspNorm;
         Mtx *mtx = alloc_display_list(sizeof(*mtx));
 
-#ifdef VERSION_EU
+#if ENABLE_50HZ
         f32 aspect = ((f32) gCurGraphNodeRoot->width / (f32) gCurGraphNodeRoot->height) * 1.1f;
 #else
         f32 aspect = (f32) gCurGraphNodeRoot->width / (f32) gCurGraphNodeRoot->height;

@@ -34,6 +34,9 @@
 // Support Rumble Pak
 #define ENABLE_RUMBLE (0 || VERSION_SH || VERSION_CN)
 
+// Enable 50Hz output
+#define ENABLE_50HZ (0 || VERSION_EU)
+
 // Screen Size Defines
 #define SCREEN_WIDTH 320
 #define SCREEN_HEIGHT 240
@@ -45,10 +48,10 @@
 
 // Border Height Define for NTSC Versions
 #ifdef TARGET_N64
-#ifndef VERSION_EU
-#define BORDER_HEIGHT 8
-#else
+#if ENABLE_50HZ
 #define BORDER_HEIGHT 1
+#else
+#define BORDER_HEIGHT 8
 #endif
 #else
 // What's the point of having a border?

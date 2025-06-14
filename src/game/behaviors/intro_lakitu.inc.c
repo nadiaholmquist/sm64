@@ -1,3 +1,4 @@
+#include "config.h"
 
 /**
  * @file intro_lakitu.inc.c
@@ -63,7 +64,7 @@ s32 intro_lakitu_set_pos_and_focus(struct Object *obj, struct CutsceneSplinePoin
     return splineFinished;
 }
 
-#ifdef VERSION_EU
+#if ENABLE_50HZ
 #define TIMER1 599
 #define TIMER2 74
 #else
@@ -110,7 +111,7 @@ void bhv_intro_lakitu_loop(void) {
             }
 
             switch (o->oTimer) {
-#if defined(VERSION_US) || defined(VERSION_SH) || defined(VERSION_CN)
+#if !defined(VERSION_JP) && !ENABLE_50HZ
                 case 534:
                     cur_obj_play_sound_2(SOUND_ACTION_FLYING_FAST);
                     break;
@@ -131,7 +132,7 @@ void bhv_intro_lakitu_loop(void) {
                     o->oAnimState--;
                     break;
             }
-#ifdef VERSION_EU
+#if ENABLE_50HZ
             if (o->oTimer == 446) {
                 cur_obj_play_sound_2(SOUND_ACTION_FLYING_FAST);
             }

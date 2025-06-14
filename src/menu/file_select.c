@@ -21,6 +21,7 @@
 #include "game/rumble_init.h"
 #include "sm64.h"
 #include "text_strings.h"
+#include "config.h"
 
 #include "eu_translation.h"
 #ifdef VERSION_EU
@@ -638,7 +639,7 @@ void render_score_menu_buttons(struct Object *scoreButton) {
     sMainMenuButtons[MENU_BUTTON_SCORE_ERASE_FILE]->oMenuButtonScale = 0.11111111f;
 }
 
-#ifdef VERSION_EU
+#if ENABLE_50HZ
     #define SCORE_TIMER 46
 #else
     #define SCORE_TIMER 31
@@ -759,7 +760,7 @@ void render_copy_menu_buttons(struct Object *copyButton) {
     sMainMenuButtons[MENU_BUTTON_COPY_ERASE_FILE]->oMenuButtonScale = 0.11111111f;
 }
 
-#ifdef VERSION_EU
+#if ENABLE_50HZ
     #define BUZZ_TIMER 36
 #else
     #define BUZZ_TIMER 21
@@ -836,7 +837,7 @@ void copy_action_file_button(struct Object *copyButton, s32 copyFileButtonID) {
     }
 }
 
-#ifdef VERSION_EU
+#if ENABLE_50HZ
     #define ACTION_TIMER      41
     #define MAIN_RETURN_TIMER 36
 #else
@@ -2013,7 +2014,7 @@ void score_menu_display_message(s8 messageID) {
     #define RETURN_X_OLD RETURN_X
 #endif
 
-#ifdef VERSION_EU
+#if ENABLE_50HZ
     #define FADEOUT_TIMER 35
 #else
     #define FADEOUT_TIMER 20
