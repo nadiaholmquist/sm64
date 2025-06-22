@@ -563,16 +563,16 @@ ifeq ($(ENABLE_OPENGL),1)
   GFX_CFLAGS  := -DENABLE_OPENGL
   GFX_LDFLAGS :=
   ifeq ($(TARGET_WINDOWS),1)
-    GFX_CFLAGS  += $(shell sdl2-config --cflags) -DGLEW_STATIC
-    GFX_LDFLAGS += $(shell sdl2-config --libs) -lglew32 -lopengl32 -lwinmm -limm32 -lversion -loleaut32 -lsetupapi
+    GFX_CFLAGS  += $(shell pkg-config --cflags sdl3) -DGLEW_STATIC
+    GFX_LDFLAGS += $(shell pkg-config --libs sdl3) -lglew32 -lopengl32 -lwinmm -limm32 -lversion -loleaut32 -lsetupapi
   endif
   ifeq ($(TARGET_LINUX),1)
-    GFX_CFLAGS  += $(shell sdl2-config --cflags)
-    GFX_LDFLAGS += -lGL $(shell sdl2-config --libs)
+    GFX_CFLAGS  += $(shell pkg-config --cflags sdl3)
+    GFX_LDFLAGS += -lGL $(shell pkg-config --libs sdl3)
   endif
   ifeq ($(TARGET_WEB),1)
     GFX_CFLAGS  += -s USE_SDL=2
-    GFX_LDFLAGS += -lGL -lSDL2
+    GFX_LDFLAGS += -lGL -lSDL3
   endif
 endif
 ifeq ($(ENABLE_DX11),1)

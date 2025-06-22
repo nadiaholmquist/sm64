@@ -1,5 +1,6 @@
 #ifdef ENABLE_OPENGL
 
+#include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -20,13 +21,15 @@
 #define GL_GLEXT_PROTOTYPES 1
 #include "SDL_opengl.h"
 #else
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #define GL_GLEXT_PROTOTYPES 1
-#include <SDL2/SDL_opengles2.h>
+#include <SDL3/SDL_opengles2.h>
 #endif
 
 #include "gfx_cc.h"
 #include "gfx_rendering_api.h"
+
+#include <stdlib.h>
 
 struct ShaderProgram {
     uint32_t shader_id;

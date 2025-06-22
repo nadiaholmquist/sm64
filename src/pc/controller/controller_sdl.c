@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <math.h>
 
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 
 #include <ultra64.h>
 
@@ -14,10 +14,10 @@
 #define DEADZONE 4960
 
 static bool init_ok;
-static SDL_GameController *sdl_cntrl;
+static SDL_Gamepad *sdl_cntrl;
 
 static void controller_sdl_init(void) {
-    if (SDL_Init(SDL_INIT_GAMECONTROLLER) != 0) {
+    if (!SDL_Init(SDL_INIT_GAMEPAD) != 0) {
         fprintf(stderr, "SDL init error: %s\n", SDL_GetError());
         return;
     }
@@ -30,39 +30,37 @@ static void controller_sdl_read(OSContPad *pad) {
         return;
     }
 
-    SDL_GameControllerUpdate();
+    SDL_UpdateGamepads();
 
-    if (sdl_cntrl != NULL && !SDL_GameControllerGetAttached(sdl_cntrl)) {
-        SDL_GameControllerClose(sdl_cntrl);
+    if (sdl_cntrl != NULL && !SDL_GamepadConnected(sdl_cntrl)) {
+        SDL_CloseGamepad(sdl_cntrl);
         sdl_cntrl = NULL;
     }
     if (sdl_cntrl == NULL) {
-        for (int i = 0; i < SDL_NumJoysticks(); i++) {
-            if (SDL_IsGameController(i)) {
-                sdl_cntrl = SDL_GameControllerOpen(i);
-                if (sdl_cntrl != NULL) {
-                    break;
-                }
-            }
-        }
-        if (sdl_cntrl == NULL) {
-            return;
+        int gamepad_count;
+        SDL_JoystickID* gamepads = SDL_GetGamepads(&gamepad_count);
+        for (int i = 0; i < gamepad_count; i++) {
+            sdl_cntrl = SDL_OpenGamepad(gamepads[i]);
+            if (sdl_cntrl != NULL)
+                break;
+            if (i == gamepad_count - 1)
+                return;
         }
     }
 
-    if (SDL_GameControllerGetButton(sdl_cntrl, SDL_CONTROLLER_BUTTON_START)) pad->button |= START_BUTTON;
-    if (SDL_GameControllerGetButton(sdl_cntrl, SDL_CONTROLLER_BUTTON_LEFTSHOULDER)) pad->button |= Z_TRIG;
-    if (SDL_GameControllerGetButton(sdl_cntrl, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER)) pad->button |= R_TRIG;
-    if (SDL_GameControllerGetButton(sdl_cntrl, SDL_CONTROLLER_BUTTON_A)) pad->button |= A_BUTTON;
-    if (SDL_GameControllerGetButton(sdl_cntrl, SDL_CONTROLLER_BUTTON_X)) pad->button |= B_BUTTON;
+    if (SDL_GetGamepadButton(sdl_cntrl, SDL_GAMEPAD_BUTTON_START)) pad->button |= START_BUTTON;
+    if (SDL_GetGamepadButton(sdl_cntrl, SDL_GAMEPAD_BUTTON_LEFT_SHOULDER)) pad->button |= Z_TRIG;
+    if (SDL_GetGamepadButton(sdl_cntrl, SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER)) pad->button |= R_TRIG;
+    if (SDL_GetGamepadButton(sdl_cntrl, SDL_GAMEPAD_BUTTON_SOUTH)) pad->button |= A_BUTTON;
+    if (SDL_GetGamepadButton(sdl_cntrl, SDL_GAMEPAD_BUTTON_WEST)) pad->button |= B_BUTTON;
 
-    int16_t leftx = SDL_GameControllerGetAxis(sdl_cntrl, SDL_CONTROLLER_AXIS_LEFTX);
-    int16_t lefty = SDL_GameControllerGetAxis(sdl_cntrl, SDL_CONTROLLER_AXIS_LEFTY);
-    int16_t rightx = SDL_GameControllerGetAxis(sdl_cntrl, SDL_CONTROLLER_AXIS_RIGHTX);
-    int16_t righty = SDL_GameControllerGetAxis(sdl_cntrl, SDL_CONTROLLER_AXIS_RIGHTY);
+    int16_t leftx = SDL_GetGamepadAxis(sdl_cntrl, SDL_GAMEPAD_AXIS_LEFTX);
+    int16_t lefty = SDL_GetGamepadAxis(sdl_cntrl, SDL_GAMEPAD_AXIS_LEFTY);
+    int16_t rightx = SDL_GetGamepadAxis(sdl_cntrl, SDL_GAMEPAD_AXIS_RIGHTX);
+    int16_t righty = SDL_GetGamepadAxis(sdl_cntrl, SDL_GAMEPAD_AXIS_RIGHTY);
 
-    int16_t ltrig = SDL_GameControllerGetAxis(sdl_cntrl, SDL_CONTROLLER_AXIS_TRIGGERLEFT);
-    int16_t rtrig = SDL_GameControllerGetAxis(sdl_cntrl, SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
+    int16_t ltrig = SDL_GetGamepadAxis(sdl_cntrl, SDL_GAMEPAD_AXIS_LEFT_TRIGGER);
+    int16_t rtrig = SDL_GetGamepadAxis(sdl_cntrl, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER);
 
 #ifdef TARGET_WEB
     // Firefox has a bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1606562

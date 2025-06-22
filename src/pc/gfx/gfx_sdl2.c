@@ -2,6 +2,9 @@
 
 #if defined(ENABLE_OPENGL)
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #ifdef __MINGW32__
 #define FOR_WINDOWS 1
 #else
@@ -14,9 +17,9 @@
 #define GL_GLEXT_PROTOTYPES 1
 #include "SDL_opengl.h"
 #else
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #define GL_GLEXT_PROTOTYPES 1
-#include <SDL2/SDL_opengles2.h>
+#include <SDL3/SDL_opengles2.h>
 #endif
 
 #include "gfx_window_manager_api.h"
@@ -87,22 +90,16 @@ const SDL_Scancode scancode_rmapping_nonextended[][2] = {
 };
 
 static void set_fullscreen(bool on, bool call_callback) {
-    if (fullscreen_state == on) {
-        return;
-    }
-    fullscreen_state = on;
+    SDL_SetWindowFullscreen(wnd, on);
 
     if (on) {
-        SDL_DisplayMode mode;
-        SDL_GetDesktopDisplayMode(0, &mode);
-        window_width = mode.w;
-        window_height = mode.h;
+        SDL_HideCursor();
     } else {
-        window_width = DESIRED_SCREEN_WIDTH;
-        window_height = DESIRED_SCREEN_HEIGHT;
+        SDL_ShowCursor();
+        SDL_SetWindowSize(wnd, DESIRED_SCREEN_WIDTH, DESIRED_SCREEN_HEIGHT);
     }
-    SDL_SetWindowSize(wnd, window_width, window_height);
-    SDL_SetWindowFullscreen(wnd, on ? SDL_WINDOW_FULLSCREEN : 0);
+
+    fullscreen_state = on;
 
     if (on_fullscreen_changed_callback != NULL && call_callback) {
         on_fullscreen_changed_callback(on);
@@ -162,10 +159,9 @@ static void gfx_sdl_init(const char *game_name, bool start_in_fullscreen) {
     //SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
     char title[512];
-    int len = sprintf(title, "%s (%s)", game_name, GFX_API_NAME);
+    sprintf(title, "%s (%s)", game_name, GFX_API_NAME);
 
-    wnd = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-            window_width, window_height, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+    wnd = SDL_CreateWindow(title, window_width, window_height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
     if (start_in_fullscreen) {
         set_fullscreen(true, false);
@@ -243,26 +239,21 @@ static void gfx_sdl_handle_events(void) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         switch (event.type) {
-#ifndef TARGET_WEB
-            // Scancodes are broken in Emscripten SDL2: https://bugzilla.libsdl.org/show_bug.cgi?id=3259
-            case SDL_KEYDOWN:
-                if (event.key.keysym.sym == SDLK_F10) {
+            case SDL_EVENT_KEY_DOWN:
+                if (event.key.key == SDLK_F10) {
                     set_fullscreen(!fullscreen_state, true);
                     break;
                 }
-                gfx_sdl_onkeydown(event.key.keysym.scancode);
+                gfx_sdl_onkeydown(event.key.scancode);
                 break;
-            case SDL_KEYUP:
-                gfx_sdl_onkeyup(event.key.keysym.scancode);
+            case SDL_EVENT_KEY_UP:
+                gfx_sdl_onkeyup(event.key.scancode);
                 break;
-#endif
-            case SDL_WINDOWEVENT:
-                if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-                    window_width = event.window.data1;
-                    window_height = event.window.data2;
-                }
+            case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+                window_width = event.window.data1;
+                window_height = event.window.data2;
                 break;
-            case SDL_QUIT:
+            case SDL_EVENT_QUIT:
                 exit(0);
         }
     }
