@@ -166,11 +166,7 @@ void main_func(void) {
     wm_api = &gfx_dxgi_api;
 #elif defined(ENABLE_OPENGL)
     rendering_api = &gfx_opengl_api;
-    #if defined(__linux__) || defined(__BSD__)
-        wm_api = &gfx_glx;
-    #else
-        wm_api = &gfx_sdl;
-    #endif
+    wm_api = &gfx_sdl;
 #elif defined(ENABLE_GFX_DUMMY)
     rendering_api = &gfx_dummy_renderer_api;
     wm_api = &gfx_dummy_wm_api;
@@ -181,26 +177,9 @@ void main_func(void) {
     wm_api->set_fullscreen_changed_callback(on_fullscreen_changed);
     wm_api->set_keyboard_callbacks(keyboard_on_key_down, keyboard_on_key_up, keyboard_on_all_keys_up);
     
-#if HAVE_WASAPI
-    if (audio_api == NULL && audio_wasapi.init()) {
-        audio_api = &audio_wasapi;
-    }
-#endif
-#if HAVE_PULSE_AUDIO
-    if (audio_api == NULL && audio_pulse.init()) {
-        audio_api = &audio_pulse;
-    }
-#endif
-#if HAVE_ALSA
-    if (audio_api == NULL && audio_alsa.init()) {
-        audio_api = &audio_alsa;
-    }
-#endif
-#ifdef TARGET_WEB
     if (audio_api == NULL && audio_sdl.init()) {
         audio_api = &audio_sdl;
     }
-#endif
     if (audio_api == NULL) {
         audio_api = &audio_null;
     }
