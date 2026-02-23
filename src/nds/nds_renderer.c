@@ -42,6 +42,8 @@ static uint16_t texture_fifo[2048];
 static uint16_t texture_fifo_start;
 static uint16_t texture_fifo_end;
 
+bool nds_clear_textures = false;
+
 static uint8_t *texture_address;
 DTCM_BSS static uint8_t texture_format;
 DTCM_BSS static uint8_t texture_bit_width;
@@ -1192,6 +1194,19 @@ void draw_frame(Gfx *display_list) {
     background = true;
     z_depth = 0x1000 * 6;
     fog_status = 0;
+
+    if (nds_clear_textures) {
+        nds_clear_textures = false;
+        texture_fifo_start = 0;
+        texture_fifo_end = 0;
+
+        for (int i = 0; i < 2048; i++) {
+            glDeleteTextures(1, &texture_map[i].name);
+            texture_fifo[i] = 0;
+            texture_map[i].name = 0;
+            texture_map[i].address = 0;
+        }
+    }
 
     // Process and draw the frame
     execute(display_list);

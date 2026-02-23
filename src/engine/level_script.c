@@ -314,11 +314,15 @@ static void level_cmd_init_level(void) {
     sCurrentCmd = CMD_NEXT;
 }
 
+extern bool nds_clear_textures;
+
 static void level_cmd_clear_level(void) {
     clear_objects();
     clear_area_graph_nodes();
     clear_areas();
     main_pool_pop_state();
+
+    nds_clear_textures = true;
 
     sCurrentCmd = CMD_NEXT;
 }
