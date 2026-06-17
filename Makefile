@@ -486,7 +486,7 @@ ARM7_CC_CHECK_CFLAGS := -fsyntax-only -fsigned-char $(CC_CFLAGS) $(ARM7_TARGET_C
 
 ASFLAGS := $(foreach i,$(INCLUDE_DIRS),-I$(i)) $(foreach d,$(DEFINES),--defsym $(d))
 CFLAGS := -fno-strict-aliasing -fwrapv $(OPT_FLAGS) $(TARGET_CFLAGS) $(DEF_INC_CFLAGS)
-LDFLAGS := -Wl,--start-group -lc -lnds9 -Wl,--end-group -specs=$(BLOCKSDS)/sys/crts/dsi_arm9.specs -g $(foreach dir,$(LIBDIRS),-L$(dir)/lib) $(TARGET_CFLAGS)
+LDFLAGS := -Wl,--start-group -lnds9 -lc -Wl,--end-group -specs=$(BLOCKSDS)/sys/crts/dsi_arm9.specs -g $(foreach dir,$(LIBDIRS),-L$(dir)/lib) $(TARGET_CFLAGS)
 
 ARM7_CFLAGS := -fno-strict-aliasing -fwrapv $(OPT_FLAGS) $(ARM7_TARGET_CFLAGS) $(DEF_INC_CFLAGS)
 ARM7_LDFLAGS := -Wl,--start-group -lc -lnds7 -Wl,--end-group -specs=$(BLOCKSDS)/sys/crts/ds_arm7.specs -g $(foreach dir,$(LIBDIRS),-L$(dir)/lib) $(ARM7_TARGET_CFLAGS)
