@@ -99,7 +99,7 @@ extern s16 gAiBufferLengths[NUMAIBUFFERS];
 #if defined(VERSION_SH) || defined(VERSION_CN)
 #define AIBUFFER_LEN 0xb00
 #elif defined(VERSION_EU)
-#define AIBUFFER_LEN (0xa0 * 17)
+#define AIBUFFER_LEN (0xa0 * 16)
 #else
 #define AIBUFFER_LEN (0xa0 * 16)
 #endif

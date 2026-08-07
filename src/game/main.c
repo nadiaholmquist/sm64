@@ -434,7 +434,7 @@ void thread1_idle(UNUSED void *arg) {
 #elif defined(VERSION_JP)
     osViSetMode(&osViModeTable[OS_VI_NTSC_LAN1]);
 #else // VERSION_EU
-    osViSetMode(&osViModeTable[OS_VI_PAL_LAN1]);
+    osViSetMode(&osViModeTable[OS_VI_NTSC_LAN1]);
 #endif
     osViBlack(TRUE);
     osViSetSpecialFeatures(OS_VI_DITHER_FILTER_ON);

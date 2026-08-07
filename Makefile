@@ -33,7 +33,7 @@ $(eval $(call validate-option,COMPILER,ido gcc))
 #   eu - builds the 1997 PAL version
 #   sh - builds the 1997 Japanese Shindou version, with rumble pak support
 #   cn - builds the 2003 Chinese iQue version
-VERSION ?= us
+VERSION ?= eu
 $(eval $(call validate-option,VERSION,jp us eu sh cn))
 
 ifeq      ($(VERSION),jp)
@@ -135,7 +135,7 @@ endif
 # COMPARE - whether to verify the SHA-1 hash of the ROM after building
 #   1 - verifies the SHA-1 hash of the selected version of the game
 #   0 - does not verify the hash
-COMPARE ?= 1
+COMPARE ?= 0
 $(eval $(call validate-option,COMPARE,0 1))
 
 TARGET_STRING := sm64.$(VERSION).$(GRUCODE)
@@ -393,7 +393,7 @@ else
 endif
 
 # Check code syntax with host compiler
-CC_CHECK := gcc
+CC_CHECK := mips64-elf-gcc
 CC_CHECK_CFLAGS := -fsyntax-only -fsigned-char $(CC_CFLAGS) $(TARGET_CFLAGS) -std=gnu90 -Wall -Wextra -Wno-format-security -Wno-main -DNON_MATCHING -DAVOID_UB $(DEF_INC_CFLAGS)
 
 # C compiler options
@@ -412,7 +412,7 @@ ifeq ($(shell getconf LONG_BIT), 32)
   export QEMU_GUEST_BASE := 1
 else
   # Ensure that gcc treats the code as 32-bit
-  CC_CHECK_CFLAGS += -m32
+  #CC_CHECK_CFLAGS += -m32
 endif
 
 # Prevent a crash with -sopt
@@ -439,8 +439,8 @@ else
   RSPASM              := $(TOOLS_DIR)/armips
 endif
 ENDIAN_BITWIDTH       := $(BUILD_DIR)/endian-and-bitwidth
-EMULATOR = mupen64plus
-EMU_FLAGS = --noosd
+EMULATOR = /Applications/ares.app/Contents/MacOS/ares
+EMU_FLAGS =
 LOADER = loader64
 LOADER_FLAGS = -vwf
 SHA1SUM = sha1sum
