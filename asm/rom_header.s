@@ -37,7 +37,7 @@
 
 /* Region */
 #ifdef VERSION_EU
-    .ascii "E"                  /* PAL (Europe) */
+    .ascii "P"                  /* PAL (Europe) */
 #elif defined(VERSION_US)
     .ascii "E"                  /* NTSC-U (North America) */
 #else
