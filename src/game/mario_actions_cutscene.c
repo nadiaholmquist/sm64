@@ -1666,11 +1666,7 @@ static void intro_cutscene_hide_hud_and_mario(struct MarioState *m) {
     advance_cutscene_step(m);
 }
 
-#ifdef VERSION_EU
-    #define TIMER_SPAWN_PIPE 47
-#else
-    #define TIMER_SPAWN_PIPE 37
-#endif
+#define TIMER_SPAWN_PIPE 37
 
 static void intro_cutscene_peach_lakitu_scene(struct MarioState *m) {
     if ((s16) m->statusForCamera->cameraEvent != CAM_EVENT_START_INTRO) {
@@ -1684,11 +1680,7 @@ static void intro_cutscene_peach_lakitu_scene(struct MarioState *m) {
 }
 #undef TIMER_SPAWN_PIPE
 
-#ifdef VERSION_EU
-    #define TIMER_RAISE_PIPE 28
-#else
-    #define TIMER_RAISE_PIPE 38
-#endif
+#define TIMER_RAISE_PIPE 38
 
 static void intro_cutscene_raise_pipe(struct MarioState *m) {
     sIntroWarpPipeObj->oPosY = camera_approach_f32_symmetric(sIntroWarpPipeObj->oPosY, 260.0f, 10.0f);
@@ -2050,10 +2042,7 @@ static void end_peach_cutscene_summon_jumbo_star(struct MarioState *m) {
     play_sound(SOUND_AIR_PEACH_TWINKLE, sEndJumboStarObj->header.gfx.cameraToObject);
 }
 
-#if defined(VERSION_EU)
-    #define TIMER_FADE_IN_PEACH 201
-    #define TIMER_DESCEND_PEACH 280
-#elif defined(VERSION_SH) || defined(VERSION_CN)
+#if defined(VERSION_SH) || defined(VERSION_CN)
     #define TIMER_FADE_IN_PEACH 276
     #define TIMER_DESCEND_PEACH 400
 #else
@@ -2112,11 +2101,7 @@ static void end_peach_cutscene_spawn_peach(struct MarioState *m) {
     }
 }
 
-#ifdef VERSION_EU
-    #define TIMER_RUN_TO_PEACH 531
-#else
-    #define TIMER_RUN_TO_PEACH 584
-#endif
+#define TIMER_RUN_TO_PEACH 584
 
 // descend peach
 static void end_peach_cutscene_descend_peach(struct MarioState *m) {
@@ -2261,10 +2246,7 @@ static void end_peach_cutscene_dialog_1(struct MarioState *m) {
     }
 }
 
-#if defined(VERSION_EU)
-    #define TIMER_SOMETHING_SPECIAL 150
-    #define TIMER_PEACH_KISS        260
-#elif defined(VERSION_SH) || defined(VERSION_CN)
+#if defined(VERSION_SH) || defined(VERSION_CN)
     #define TIMER_SOMETHING_SPECIAL 170
     #define TIMER_PEACH_KISS        250
 #else
@@ -2565,11 +2547,7 @@ static s32 act_end_peach_cutscene(struct MarioState *m) {
     return FALSE;
 }
 
-#if defined(VERSION_EU)
-    #define TIMER_CREDITS_SHOW      51
-    #define TIMER_CREDITS_PROGRESS  80
-    #define TIMER_CREDITS_WARP     160
-#elif defined(VERSION_SH) || defined(VERSION_CN)
+#if defined(VERSION_SH) || defined(VERSION_CN)
     #define TIMER_CREDITS_SHOW      61
     #define TIMER_CREDITS_PROGRESS  90
     #define TIMER_CREDITS_WARP     204

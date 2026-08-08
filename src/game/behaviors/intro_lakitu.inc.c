@@ -63,13 +63,8 @@ s32 intro_lakitu_set_pos_and_focus(struct Object *obj, struct CutsceneSplinePoin
     return splineFinished;
 }
 
-#ifdef VERSION_EU
-#define TIMER1 599
-#define TIMER2 74
-#else
 #define TIMER1 720
 #define TIMER2 98
-#endif
 
 void bhv_intro_lakitu_loop(void) {
     Vec3f sp64, sp58, sp4C;
@@ -110,7 +105,7 @@ void bhv_intro_lakitu_loop(void) {
             }
 
             switch (o->oTimer) {
-#if defined(VERSION_US) || defined(VERSION_SH) || defined(VERSION_CN)
+#ifndef VERSION_JP
                 case 534:
                     cur_obj_play_sound_2(SOUND_ACTION_FLYING_FAST);
                     break;
@@ -131,14 +126,6 @@ void bhv_intro_lakitu_loop(void) {
                     o->oAnimState--;
                     break;
             }
-#ifdef VERSION_EU
-            if (o->oTimer == 446) {
-                cur_obj_play_sound_2(SOUND_ACTION_FLYING_FAST);
-            }
-            if (o->oTimer == 485) {
-                cur_obj_play_sound_2(SOUND_ACTION_INTRO_UNK45E);
-            }
-#endif
             break;
 
         case 2:
