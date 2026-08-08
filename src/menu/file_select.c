@@ -638,11 +638,7 @@ void render_score_menu_buttons(struct Object *scoreButton) {
     sMainMenuButtons[MENU_BUTTON_SCORE_ERASE_FILE]->oMenuButtonScale = 0.11111111f;
 }
 
-#ifdef VERSION_EU
-    #define SCORE_TIMER 46
-#else
-    #define SCORE_TIMER 31
-#endif
+#define SCORE_TIMER 31
 
 /**
  * In the score menu, checks if a button was clicked to play a sound, button state and other functions.
@@ -759,11 +755,7 @@ void render_copy_menu_buttons(struct Object *copyButton) {
     sMainMenuButtons[MENU_BUTTON_COPY_ERASE_FILE]->oMenuButtonScale = 0.11111111f;
 }
 
-#ifdef VERSION_EU
-    #define BUZZ_TIMER 36
-#else
-    #define BUZZ_TIMER 21
-#endif
+#define BUZZ_TIMER 21
 
 /**
  * Copy Menu phase actions that handles what to do when a file button is clicked.
@@ -836,13 +828,8 @@ void copy_action_file_button(struct Object *copyButton, s32 copyFileButtonID) {
     }
 }
 
-#ifdef VERSION_EU
-    #define ACTION_TIMER      41
-    #define MAIN_RETURN_TIMER 36
-#else
-    #define ACTION_TIMER      31
-    #define MAIN_RETURN_TIMER 31
-#endif
+#define ACTION_TIMER      31
+#define MAIN_RETURN_TIMER 31
 
 /**
  * In the copy menu, checks if a button was clicked to play a sound, button state and other functions.
@@ -1839,10 +1826,10 @@ void print_save_file_star_count(s8 fileIndex, s16 x, s16 y) {
     #define MARIOTEXT_Y1 65
     #define MARIOTEXT_Y2 105
 #elif defined(VERSION_EU)
-    #define SAVEFILE_X1 97
-    #define SAVEFILE_X2 204
-    #define MARIOTEXT_X1 97
-    #define MARIOTEXT_X2 204
+    #define SAVEFILE_X1 92
+    #define SAVEFILE_X2 209
+    #define MARIOTEXT_X1 92
+    #define MARIOTEXT_X2 207
     #define MARIOTEXT_Y1 65
     #define MARIOTEXT_Y2 105
 #elif defined(VERSION_CN)
@@ -1927,13 +1914,13 @@ void print_main_lang_strings(void) {
     // Print menu names
     gSPDisplayList(gDisplayListHead++, dl_ia_text_begin);
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
-    centeredX = get_str_x_pos_from_center(76, textScore[sLanguageMode], 10.0f);
+    centeredX = get_str_x_pos_from_center(67, textScore[sLanguageMode], 10.0f);
     print_generic_string(centeredX, 39, textScore[sLanguageMode]);
-    centeredX = get_str_x_pos_from_center(131, textCopy[sLanguageMode], 10.0f);
+    centeredX = get_str_x_pos_from_center(129, textCopy[sLanguageMode], 10.0f);
     print_generic_string(centeredX, 39, textCopy[sLanguageMode]);
-    centeredX = get_str_x_pos_from_center(189, textErase[sLanguageMode], 10.0f);
+    centeredX = get_str_x_pos_from_center(191, textErase[sLanguageMode], 10.0f);
     print_generic_string(centeredX, 39, textErase[sLanguageMode]);
-    centeredX = get_str_x_pos_from_center(245, textOption[sLanguageMode], 10.0f);
+    centeredX = get_str_x_pos_from_center(254, textOption[sLanguageMode], 10.0f);
     print_generic_string(centeredX, 39, textOption[sLanguageMode]);
     gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
 
@@ -2013,11 +2000,7 @@ void score_menu_display_message(s8 messageID) {
     #define RETURN_X_OLD RETURN_X
 #endif
 
-#ifdef VERSION_EU
-    #define FADEOUT_TIMER 35
-#else
-    #define FADEOUT_TIMER 20
-#endif
+#define FADEOUT_TIMER 20
 
 /**
  * Prints score menu strings that shows on the green background menu screen.
@@ -2041,7 +2024,7 @@ void print_score_menu_strings(void) {
     // Print messageID called above
     score_menu_display_message(sStatusMessageID);
 
-#ifndef VERSION_EU
+#ifndef VERSION_EU_
     // Print file star counts
     gSPDisplayList(gDisplayListHead++, dl_rgba16_text_begin);
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
@@ -2056,7 +2039,7 @@ void print_score_menu_strings(void) {
     gSPDisplayList(gDisplayListHead++, dl_ia_text_begin);
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
 #ifdef VERSION_EU
-    centeredX = get_str_x_pos_from_center(69, textReturn[sLanguageMode], 10.0f);
+    centeredX = get_str_x_pos_from_center(60, textReturn[sLanguageMode], 10.0f);
 #endif
     print_generic_string(RETURN_X, 35, LANGUAGE_ARRAY(textReturn));
 #ifdef VERSION_EU
@@ -2064,7 +2047,7 @@ void print_score_menu_strings(void) {
 #endif
     print_generic_string(COPYFILE_X1, 35, LANGUAGE_ARRAY(textCopyFileButton));
 #ifdef VERSION_EU
-    centeredX = get_str_x_pos_from_center(249, textEraseFileButton[sLanguageMode], 10.0f);
+    centeredX = get_str_x_pos_from_center(258, textEraseFileButton[sLanguageMode], 10.0f);
 #endif
     print_generic_string(ERASEFILE_X1, 35, LANGUAGE_ARRAY(textEraseFileButton));
     gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
@@ -2264,7 +2247,7 @@ void print_copy_menu_strings(void) {
     gSPDisplayList(gDisplayListHead++, dl_ia_text_begin);
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
 #ifdef VERSION_EU
-    centeredX = get_str_x_pos_from_center(69, textReturn[sLanguageMode], 10.0f);
+    centeredX = get_str_x_pos_from_center(60, textReturn[sLanguageMode], 10.0f);
 #endif
     print_generic_string(RETURN_X, 35, LANGUAGE_ARRAY(textReturn));
 #ifdef VERSION_EU
@@ -2272,7 +2255,7 @@ void print_copy_menu_strings(void) {
 #endif
     print_generic_string(VIEWSCORE_X1, 35, LANGUAGE_ARRAY(textViewScore));
 #ifdef VERSION_EU
-    centeredX = get_str_x_pos_from_center(249, textEraseFileButton[sLanguageMode], 10.0f);
+    centeredX = get_str_x_pos_from_center(257, textEraseFileButton[sLanguageMode], 10.0f);
 #endif
     print_generic_string(ERASEFILE_X2, 35, LANGUAGE_ARRAY(textEraseFileButton));
     gSPDisplayList(gDisplayListHead++, dl_ia_text_end);
@@ -2584,11 +2567,11 @@ void print_erase_menu_strings(void) {
     gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
 
 #ifdef VERSION_EU
-    centeredX = get_str_x_pos_from_center(69, textReturn[sLanguageMode], 10.0f);
+    centeredX = get_str_x_pos_from_center(60, textReturn[sLanguageMode], 10.0f);
     print_generic_string(centeredX, 35, textReturn[sLanguageMode]);
     centeredX = get_str_x_pos_from_center(159, textViewScore[sLanguageMode], 10.0f);
     print_generic_string(centeredX, 35, textViewScore[sLanguageMode]);
-    centeredX = get_str_x_pos_from_center(249, textCopyFileButton[sLanguageMode], 10.0f);
+    centeredX = get_str_x_pos_from_center(258, textCopyFileButton[sLanguageMode], 10.0f);
     print_generic_string(centeredX, 35, textCopyFileButton[sLanguageMode]);
 #else
     print_generic_string(RETURN_X_OLD, 35, textReturn);
@@ -2657,7 +2640,7 @@ void print_sound_mode_menu_strings(void) {
 
 #ifdef VERSION_EU // In EU their X position get increased each string
     // Print sound mode names
-    for (mode = 0, textX = 90; mode < 3; textX += 70, mode++) {
+    for (mode = 0, textX = 87; mode < 3; textX += 73, mode++) {
         if (mode == sSoundMode) {
             gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
         } else {
@@ -2669,7 +2652,7 @@ void print_sound_mode_menu_strings(void) {
     }
 
     // In EU, print language mode names
-    for (mode = 0, textX = 90; mode < 3; textX += 70, mode++) {
+    for (mode = 0, textX = 87; mode < 3; textX += 73, mode++) {
         if (mode == sLanguageMode) {
             gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, sTextBaseAlpha);
         } else {

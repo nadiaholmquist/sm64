@@ -369,11 +369,7 @@ void print_act_selector_strings(void) {
     // Print the numbers above each star.
     for (i = 1; i <= sVisibleStars; i++) {
         starNumbers[0] = i;
-#ifdef VERSION_EU
-        print_menu_generic_string(128 - (sVisibleStars - 1) * 15 + i * 30, 38, starNumbers);
-#else
         print_menu_generic_string(122 - (sVisibleStars - 1) * 17 + i * 34, 38, starNumbers);
-#endif
     }
 
     gSPDisplayList(gDisplayListHead++, dl_menu_ia8_text_end);
