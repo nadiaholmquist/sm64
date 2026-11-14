@@ -36,14 +36,7 @@
 .ascii "SM"                     /* Cartridge ID */
 
 /* Region */
-#ifdef VERSION_EU
-    .ascii "P"                  /* PAL (Europe) */
-#elif defined(VERSION_US)
-    .ascii "E"                  /* NTSC-U (North America) */
-#else
-    .ascii "J"                  /* NTSC-J (Japan) */
-#endif
-
+.byte 0                         /* Region-free */
 
 #ifdef VERSION_SH
     .byte  0x03                 /* Version (Shindou) */
