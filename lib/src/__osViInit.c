@@ -45,7 +45,7 @@ void __osViInit(void) {
         osViClock = VI_NTSC_CLOCK;
     } else {
         __osViNext->modep = &osViModeMpalLan1;
-        osViClock = VI_MPAL_CLOCK;
+        osViClock = VI_PAL_CLOCK;
     }
 #elif defined(VERSION_EU)
     if (osTvType == TV_TYPE_PAL) {

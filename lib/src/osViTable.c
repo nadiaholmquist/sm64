@@ -717,10 +717,10 @@ OSViMode osViModeTable[] = {
       /*comRegs*/
       { /*ctrl*/ 12574 - CN_SUB,
         /*width*/ 320,
-        /*burst*/ 73735737,
+        /*burst*/ 65348153,
         /*vSync*/ 525,
-        /*hSync*/ 265233,
-        /*leap*/ 202968090,
+        /*hSync*/ 3155,
+        /*leap*/ 206769235,
         /*hStart*/ 7078636,
         /*xScale*/ 512,
         /*vCurrent*/ 0 },
